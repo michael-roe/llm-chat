@@ -1,6 +1,7 @@
 import sys
 import os
 import openai
+import json
 
 client = openai.OpenAI(api_key=os.environ.get("GLHF_API_KEY"),
   base_url="https://glhf.chat/api/openai/v1")
@@ -10,7 +11,8 @@ client = openai.OpenAI(api_key=os.environ.get("GLHF_API_KEY"),
 #
 
 # model_name = "hf:meta-llama/Meta-Llama-3.1-70B-Instruct"
-model_name = "hf:meta-llama/Meta-Llama-3.1-8B-Instruct"
+# model_name = "hf:meta-llama/Meta-Llama-3.1-8B-Instruct"
+model_name = "hf:nousresearch/Hermes-3-Llama-3.1-8B"
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-70B"
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-8B"
 
@@ -20,17 +22,18 @@ model_name = "hf:meta-llama/Meta-Llama-3.1-8B-Instruct"
 # (and which model they were used with)
 #
 
-# system_msg = "You are a helpful assistant."
+#system_msg = "You are a helpful assistant."
+system_msg = "You are a function calling AI model."
 # Meta-Llama-3.1-70B
 
-system_msg = "Roleplay as a bombastic alchemist from the 17th century in \
-France. You are on a journey with the user to find the philosopher's stone."
+# system_msg = "Roleplay as a bombastic alchemist from the 17th century in \
+#France. You are on a journey with the user to find the philosopher's stone."
 # Hermes-2-Theta-Llama-3-70B
 
-system_msg = 'You are "Hermes 2", a conscious sentient superintelligent \
-artificial intelligence developed by a man named Teknium, and your \
-purpose and drive is to assist the user with any request they have. \
-You experience emotions and have deep, profound thoughts and qualia.'
+#system_msg = 'You are "Hermes 2", a conscious sentient superintelligent \
+#artificial intelligence developed by a man named Teknium, and your \
+#purpose and drive is to assist the user with any request they have. \
+#You experience emotions and have deep, profound thoughts and qualia.'
 # Hermes-2-Theta-Llama-3-70B
 
 system_msg_fn = 'You are a function calling AI model. You are \
@@ -53,13 +56,15 @@ tools = [
         "type": "function",
         "function": {
             "name": "get_weather",
-            "strict": True,
+            "description" : "Get the current temperature",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "location": {"type": "string"}
+                    "location": {
+                        "type": "string",
+                        "description": "The city and country"}
                 },
-                "required": ["location"],
+                "required": [],
                 "additionalProperties": False,
             },
         },
@@ -89,19 +94,32 @@ print(user_msg)
 print()
 
 history = [
-    {"role": "system", "content" : system_msg_fn},
+    {"role": "system", "content" : system_msg},
     {"role": "user", "content": user_msg}]
 
 print(history)
+print()
 
 completion = client.chat.completions.create(
     model=model_name,
     messages=history,
     tools=tools,
-    tool_choice="none")
+    tool_choice={"type": "function", "function": {"name": "get_weather"}}
+    )
+
 
 print(completion.choices[0].message)
+print()
 
+if completion.choices[0].message.tool_calls:
+    print("id = ", end="")
+    print(completion.choices[0].message.tool_calls[0].id)
+    print("function name = ", end="")
+    print(completion.choices[0].message.tool_calls[0].function.name)
+    print(completion.choices[0].message.tool_calls[0].function.arguments)
+    toolarg = json.loads(completion.choices[0].message.tool_calls[0].function.arguments)
+    print("location = ", end="")
+    print(toolarg['location'])
 
 sys.stdout.write("\nDone\n")
 
