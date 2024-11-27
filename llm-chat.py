@@ -86,8 +86,8 @@ print("System: ", end="")
 print(system_msg)
 print()
 
-print(tools)
-print()
+# print(tools)
+# print()
 
 print("User: ", end="")
 print(user_msg)
@@ -97,8 +97,8 @@ history = [
     {"role": "system", "content" : system_msg},
     {"role": "user", "content": user_msg}]
 
-print(history)
-print()
+# print(history)
+# print()
 
 completion = client.chat.completions.create(
     model=model_name,
@@ -114,14 +114,11 @@ print()
 history.append(completion.choices[0].message)
 
 if completion.choices[0].message.tool_calls:
-    print("id = ", end="")
-    print(completion.choices[0].message.tool_calls[0].id)
-    print("function name = ", end="")
-    print(completion.choices[0].message.tool_calls[0].function.name)
-    print(completion.choices[0].message.tool_calls[0].function.arguments)
+    # print(completion.choices[0].message.tool_calls[0].id)
+    # print("function name = ", end="")
+    # print(completion.choices[0].message.tool_calls[0].function.name)
+    # print(completion.choices[0].message.tool_calls[0].function.arguments)
     toolarg = json.loads(completion.choices[0].message.tool_calls[0].function.arguments)
-    print("location = ", end="")
-    print(toolarg['location'])
     history.append({
         "role": "tool",
         "tool_call_id": completion.choices[0].message.tool_calls[0].id,
@@ -133,7 +130,7 @@ if completion.choices[0].message.tool_calls:
         tool_choice="none"
     )
     print("Assistant: ", end="")
-    print(completion.choices[0].message)
+    print(completion.choices[0].message.content)
 
             
 
