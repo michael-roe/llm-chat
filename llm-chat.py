@@ -111,6 +111,8 @@ completion = client.chat.completions.create(
 print(completion.choices[0].message)
 print()
 
+history.append(completion.choices[0].message)
+
 if completion.choices[0].message.tool_calls:
     print("id = ", end="")
     print(completion.choices[0].message.tool_calls[0].id)
@@ -120,6 +122,20 @@ if completion.choices[0].message.tool_calls:
     toolarg = json.loads(completion.choices[0].message.tool_calls[0].function.arguments)
     print("location = ", end="")
     print(toolarg['location'])
+    history.append({
+        "role": "tool",
+        "tool_call_id": completion.choices[0].message.tool_calls[0].id,
+        "content": '{"value":5.0, "units": "Cel"}'
+    })
+    completion = client.chat.completions.create(
+        model=model_name,
+        messages=history,
+        tool_choice="none"
+    )
+    print("Assistant: ", end="")
+    print(completion.choices[0].message)
+
+            
 
 sys.stdout.write("\nDone\n")
 
