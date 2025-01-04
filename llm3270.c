@@ -63,6 +63,16 @@
 #define IBM_ATTR_NUMERIC 0x10
 #define IBM_ATTR_PROTECTED 0x20
 
+#define IBM_AID_PA1 0x6c
+#define IBM_AID_CLEAR 0x6d
+#define IBM_AID_PA2 0x6e
+#define IBM_AID_PA3 0x6b
+#define IBM_AID_ENTER 0x7d
+#define IBM_AID_PF1 0xf1
+#define IBM_AID_PF2 0xf2
+#define IBM_AID_PF3 0xf3
+#define IBM_AID_PF4 0xf4
+
 unsigned char initial_msg[] =
   {TELNET_IAC, TELNET_DO, TELNET_OPT_TERMINAL};
 
@@ -90,6 +100,19 @@ static int not_first_screen = 0;
 
 static int state;
 
+unsigned char data[8192];
+
+int data_count = 0;
+
+void rx_data(int c)
+{
+  if (data_count < sizeof(data) - 1)
+  {
+    data[data_count] = c;
+    data_count++;
+  }
+}
+
 unsigned char suboption[128];
 
 int suboption_count = 0;
@@ -110,6 +133,8 @@ void end_suboption()
 
 void rx_byte(int c, int session_fd)
 {
+int i;
+
   fprintf(stderr, "%02x ", c);
   switch (state)
   {
@@ -119,11 +144,16 @@ void rx_byte(int c, int session_fd)
         fprintf(stderr, "[IAC]");
         state = STATE_DATA_IAC;
       }
+      else
+      {
+        rx_data(c);
+      }
       break;
     case STATE_DATA_IAC:
       switch (c)
       {
         case TELNET_IAC:
+          rx_data(TELNET_IAC);
           state = STATE_DATA;
           break;
         case TELNET_WILL:
@@ -145,7 +175,7 @@ void rx_byte(int c, int session_fd)
           fprintf(stderr, "[BREAK]");
           if (not_first_screen)
           {
-          write(session_fd, screen_update_msg, sizeof(screen_update_msg));
+            write(session_fd, screen_update_msg, sizeof(screen_update_msg));
           }
           else
           {
@@ -156,6 +186,35 @@ void rx_byte(int c, int session_fd)
           break;
         case TELNET_EOR:
           fprintf(stderr, "[EOR]");
+          fprintf(stderr, "(data: ");
+          for (i=0; i<data_count; i++)
+          {
+            fprintf(stderr, "%02x ", data[i]);
+          }
+          fprintf(stderr, ") ");
+          if (data_count > 0)
+          {
+            switch (data[0])
+            {
+              case IBM_AID_PA1:
+                fprintf(stderr, "[PA1]");
+                break;
+              case IBM_AID_PA2:
+                fprintf(stderr, "[PA2]");
+                break;
+              case IBM_AID_PA3:
+                fprintf(stderr, "[PA3]");
+                break;
+              case IBM_AID_ENTER:
+                fprintf(stderr, "[ENTER]");
+                break;
+              case IBM_AID_PF1:
+                fprintf(stderr, "[PF1]");
+                break;
+             }
+          }
+          data_count = 0;
+          write(session_fd, screen_update_msg, sizeof(screen_update_msg));
           state = STATE_DATA;
           break;
         default:
