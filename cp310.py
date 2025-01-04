@@ -27,12 +27,14 @@ from_unicode = {
   "\u2190": 0x9f,
   "\u2500": 0xa2,
   "\u2022": 0xa3,
+  "\u2219": 0xa3, # treat as synonym for \u2022
   "\u2099": 0xa4,
   "\u2229": 0xaa,
   "\u222A": 0xab,
   "\u22A5": 0xac,
   "\u2265": 0xae,
-  "\u2218": 0xaf,
+  "\u25e6": 0xaf,
+  "\u2218": 0xaf, # treat as synonym for \u25e6
   "\u2207": 0xba,
   "\u2206": 0xbb,
   "\u22A4": 0xbc,
@@ -40,6 +42,7 @@ from_unicode = {
   "\u2502": 0xbf,
   "\u207D": 0xc1,
   "\u207A": 0xc2,
+  "\u220e": 0xc3,
   # I'm not sure what the mapping for 0xc3 should be
   "\u2514": 0xc4,
   "\u250C": 0xc5,
@@ -47,6 +50,7 @@ from_unicode = {
   "\u2534": 0xc7,
   # 0xca NAND doesn't have the same glyph as Unicode
   # 0xcb NOR doesn't have the same glyph as Unicode
+  "\u2342": 0xce,
   "\u207E": 0xd1,
   "\u208B": 0xd2,
   "\u253c": 0xd3,
@@ -58,6 +62,7 @@ from_unicode = {
   "\u2081": 0xe1,
   "\u2082": 0xe2,
   "\u2083": 0xe3,
+  "\u2235": 0xec,
   "\u2070": 0xf0,
   # SUPERSCRIPT 1 is in ISO Latin 1
   # SUPERSCRIPT 2 is in ISO Latin 1
