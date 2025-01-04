@@ -7,6 +7,7 @@
 
 #define PORT 17002
 
+#define TELNET_EOR 239
 #define TELNET_SE 240
 #define TELNET_BREAK 243
 #define TELNET_GA 249
@@ -34,15 +35,18 @@
 #define STATE_OPT 6
 #define STATE_OPT_IAC 7
 
+#define IBM_READ_MODIFIED_ALL 0x6e
+#define IBM_ERASE_ALL_UNPROTECTED 0x6f
 #define IBM_WRITE 0xf1
 #define IBM_READ_BUFFER 0xf2
 #define IBM_WRITE_STRUCTURED 0xf3
 #define IBM_WRITE_ERASE 0xf5
 #define IBM_READ_MODIFIED 0xf6
 
-#define IBM_START_FIELD 0x1d
+#define IBM_GRAPHIC_ESCAPE 0x08
 #define IBM_SET_BUFFER_ADDRESS 0x11
 #define IBM_INSERT_CURSOR 0x13
+#define IBM_START_FIELD 0x1d
 
 #define IBM_WCC_MDT 0x1
 #define IBM_WCC_GO_AHEAD 0x2
@@ -50,6 +54,14 @@
 #define IBM_WCC_PRINT 0x8
 #define IBM_WCC_RESERVED 0x40
 #define IBM_WCC_PARITY 0x80
+
+#define IBM_ATTR_MDT 0x01
+#define IBM_ATTR_NON_DETECT 0x00
+#define IBM_ATTR_DETECT 0x04
+#define IBM_ATTR_INTENSE 0x08
+#define IBM_ATTR_NON_DISPLAY 0x0c
+#define IBM_ATTR_NUMERIC 0x10
+#define IBM_ATTR_PROTECTED 0x20
 
 unsigned char initial_msg[] =
   {TELNET_IAC, TELNET_DO, TELNET_OPT_TERMINAL};
@@ -65,6 +77,16 @@ unsigned char options_msg[] =
     TELNET_IAC, TELNET_WILL, TELNET_OPT_BINARY,
     TELNET_IAC, TELNET_WILL, TELNET_OPT_GO_AHEAD,
     TELNET_IAC, TELNET_GA};
+
+unsigned char screen_msg[] =
+  {IBM_WRITE_ERASE, IBM_WCC_PARITY | IBM_WCC_RESERVED | IBM_WCC_GO_AHEAD,
+    0xc1, IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
+
+unsigned char screen_update_msg[] =
+  {IBM_WRITE, IBM_WCC_PARITY | IBM_WCC_RESERVED | IBM_WCC_GO_AHEAD,
+    0xc2, IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
+
+static int not_first_screen = 0;
 
 static int state;
 
@@ -121,6 +143,19 @@ void rx_byte(int c, int session_fd)
           break;
         case TELNET_BREAK:
           fprintf(stderr, "[BREAK]");
+          if (not_first_screen)
+          {
+          write(session_fd, screen_update_msg, sizeof(screen_update_msg));
+          }
+          else
+          {
+            write(session_fd, screen_msg, sizeof(screen_msg));
+            not_first_screen = 1;
+          }
+          state = STATE_DATA;
+          break;
+        case TELNET_EOR:
+          fprintf(stderr, "[EOR]");
           state = STATE_DATA;
           break;
         default:
