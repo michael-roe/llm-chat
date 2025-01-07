@@ -22,9 +22,18 @@
 #define TELNET_OPT_GO_AHEAD 1
 #define TELNET_OPT_TERMINAL 24
 #define TELNET_OPT_EOR 25
+#define TELNET_OPT_ENVIRON 39
 
 #define TELNET_TERMINAL_IS 0
 #define TELNET_TERMINAL_SEND 1
+
+#define TELNET_ENVIRON_IS 0
+#define TELNET_ENVIRON_SEND 1
+
+#define TELNET_ENVIRON_VAR 0
+#define TELNET_ENVIRON_VALUE 1
+#define TELNET_ENVIRON_ESC 2
+#define TELNET_ENVIRON_USERVAR 3
 
 #define STATE_DATA 0
 #define STATE_DATA_IAC 1
@@ -80,21 +89,34 @@ unsigned char terminal_msg[] =
   {TELNET_IAC, TELNET_SB, TELNET_OPT_TERMINAL, TELNET_TERMINAL_SEND,
   TELNET_IAC, TELNET_SE};
 
+unsigned char environ_msg[] =
+  {TELNET_IAC, TELNET_SB, TELNET_OPT_ENVIRON, TELNET_ENVIRON_SEND,
+  TELNET_ENVIRON_VAR,
+  /* 'D', 'E', 'V', 'N', 'A', 'M', 'E', */
+  /* 'C', 'O', 'D', 'E', 'P', 'A', 'G', 'E', */
+  /* 'C', 'H', 'A', 'R', 'S', 'E', 'T', */
+  'U', 'S', 'E', 'R',
+  TELNET_IAC, TELNET_SE};
+
 unsigned char options_msg[] =
   {TELNET_IAC, TELNET_DO, TELNET_OPT_EOR,
     TELNET_IAC, TELNET_WILL, TELNET_OPT_EOR,
     TELNET_IAC, TELNET_DO, TELNET_OPT_BINARY,
     TELNET_IAC, TELNET_WILL, TELNET_OPT_BINARY,
     TELNET_IAC, TELNET_WILL, TELNET_OPT_GO_AHEAD,
-    TELNET_IAC, TELNET_GA};
+    TELNET_IAC, TELNET_DO, TELNET_OPT_ENVIRON};
 
 unsigned char screen_msg[] =
   {IBM_WRITE_ERASE, IBM_WCC_PARITY | IBM_WCC_RESERVED | IBM_WCC_GO_AHEAD,
-    0xc1, IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
+    IBM_START_FIELD, IBM_ATTR_PROTECTED,
+    0xd3, 0x96, 0x87, 0x89, 0x95,
+    IBM_START_FIELD, 0x40,
+    IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
 
 unsigned char screen_update_msg[] =
   {IBM_WRITE, IBM_WCC_PARITY | IBM_WCC_RESERVED | IBM_WCC_GO_AHEAD,
-    0xc2, IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
+    0x95,
+    IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
 
 static int not_first_screen = 0;
 
@@ -196,6 +218,9 @@ int i;
           {
             switch (data[0])
             {
+              case IBM_AID_CLEAR:
+                fprintf(stderr, "[CLEAR]");
+                break;
               case IBM_AID_PA1:
                 fprintf(stderr, "[PA1]");
                 break;
@@ -213,8 +238,15 @@ int i;
                 break;
              }
           }
+          if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
+          {
+            write(session_fd, screen_msg, sizeof(screen_msg));
+          }
+          else
+          {
+            write(session_fd, screen_update_msg, sizeof(screen_update_msg));
+          }
           data_count = 0;
-          write(session_fd, screen_update_msg, sizeof(screen_update_msg));
           state = STATE_DATA;
           break;
         default:
@@ -227,6 +259,11 @@ int i;
       {
         fprintf(stderr, "[WILL TERMINAL-TYPE]");
         write(session_fd, terminal_msg, sizeof(terminal_msg));
+      }
+      else if (c == TELNET_OPT_ENVIRON)
+      {
+        fprintf(stderr, "[WILL NEW-ENVIRON]");
+        write(session_fd, environ_msg, sizeof(environ_msg));
       }
       else
       {
@@ -277,6 +314,23 @@ int i;
             write(session_fd, options_msg, sizeof(options_msg));
           }
         }
+        else if ((suboption_count > 2) &&
+          (suboption[0] == TELNET_OPT_ENVIRON) &&
+          (suboption[1] == TELNET_ENVIRON_IS))
+        {
+          fprintf(stderr, "[NEW-ENVIRON] [IS] ");
+          for (i=0; i<suboption_count; i++)
+          {
+            if (suboption[i] < 5)
+            {
+              fprintf(stderr, "(%02x)", suboption[i]);
+            }
+            else
+            {
+              fprintf(stderr, "%c", suboption[i]);
+            }
+          }
+        }
         if (suboption_count > 2)
         {
           fprintf(stderr, "[%d] [%d] %s [SE]", suboption[0], suboption[1],
@@ -290,6 +344,7 @@ int i;
         {
           fprintf(stderr, "[SE]");
         }
+        suboption_count = 0;
         state = STATE_DATA;
       }
       break;
