@@ -82,12 +82,15 @@
 #define IBM_AID_PF3 0xf3
 #define IBM_AID_PF4 0xf4
 
-unsigned char initial_msg[] =
+unsigned char do_terminal_msg[] =
   {TELNET_IAC, TELNET_DO, TELNET_OPT_TERMINAL};
 
 unsigned char terminal_msg[] =
   {TELNET_IAC, TELNET_SB, TELNET_OPT_TERMINAL, TELNET_TERMINAL_SEND,
   TELNET_IAC, TELNET_SE};
+
+unsigned char do_environ_msg[] =
+  {TELNET_IAC, TELNET_DO, TELNET_OPT_ENVIRON};
 
 unsigned char environ_msg[] =
   {TELNET_IAC, TELNET_SB, TELNET_OPT_ENVIRON, TELNET_ENVIRON_SEND,
@@ -106,8 +109,7 @@ unsigned char options_msg[] =
     TELNET_IAC, TELNET_WILL, TELNET_OPT_EOR,
     TELNET_IAC, TELNET_DO, TELNET_OPT_BINARY,
     TELNET_IAC, TELNET_WILL, TELNET_OPT_BINARY,
-    TELNET_IAC, TELNET_WILL, TELNET_OPT_GO_AHEAD,
-    TELNET_IAC, TELNET_DO, TELNET_OPT_ENVIRON};
+    TELNET_IAC, TELNET_WILL, TELNET_OPT_GO_AHEAD};
 
 unsigned char screen_msg[] =
   {IBM_WRITE_ERASE, IBM_WCC_PARITY | IBM_WCC_RESERVED | IBM_WCC_GO_AHEAD,
@@ -314,12 +316,12 @@ int i;
           if (strncmp(suboption + 2, "IBM-3278", 8) == 0)
           {
             fprintf(stderr, "(terminal is IBM-3278)");
-            write(session_fd, options_msg, sizeof(options_msg));
+            write(session_fd, do_environ_msg, sizeof(do_environ_msg));
           }
           else if (strncmp(suboption + 2, "IBM-3279", 8) == 0)
           {
             fprintf(stderr, "(terminal is IBM-3279)");
-            write(session_fd, options_msg, sizeof(options_msg));
+            write(session_fd, do_environ_msg, sizeof(do_environ_msg));
           }
         }
         else if ((suboption_count > 2) &&
@@ -338,6 +340,7 @@ int i;
               fprintf(stderr, "%c", suboption[i]);
             }
           }
+          write(session_fd, options_msg, sizeof(options_msg));
         }
         if (suboption_count > 2)
         {
@@ -370,7 +373,7 @@ unsigned char buff[1024];
 
   state = STATE_DATA;
 
-  write(session_fd, initial_msg, sizeof(initial_msg));
+  write(session_fd, do_terminal_msg, sizeof(do_terminal_msg));
 
   while ((in_buffer = read(session_fd, buff, sizeof(buff) - 1)) > 0)
   {
