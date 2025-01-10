@@ -91,11 +91,14 @@ unsigned char terminal_msg[] =
 
 unsigned char environ_msg[] =
   {TELNET_IAC, TELNET_SB, TELNET_OPT_ENVIRON, TELNET_ENVIRON_SEND,
-  TELNET_ENVIRON_VAR,
+  TELNET_ENVIRON_USERVAR,
+  'K', 'B', 'D', 'T', 'Y', 'P', 'E',
+  TELNET_ENVIRON_USERVAR,
+  'C', 'O', 'D', 'E', 'P', 'A', 'G', 'E',
+  TELNET_ENVIRON_USERVAR,
+  'C', 'H', 'A', 'R', 'S', 'E', 'T',
+  /* 'U', 'S', 'E', 'R', */
   /* 'D', 'E', 'V', 'N', 'A', 'M', 'E', */
-  /* 'C', 'O', 'D', 'E', 'P', 'A', 'G', 'E', */
-  /* 'C', 'H', 'A', 'R', 'S', 'E', 'T', */
-  'U', 'S', 'E', 'R',
   TELNET_IAC, TELNET_SE};
 
 unsigned char options_msg[] =
@@ -308,7 +311,12 @@ int i;
           (suboption[1] == TELNET_TERMINAL_IS))
         {
           fprintf(stderr, "[TERMINAL-TYPE] [IS] %s", suboption + 2);
-          if (strncmp(suboption + 2, "IBM-3279", 8) == 0)
+          if (strncmp(suboption + 2, "IBM-3278", 8) == 0)
+          {
+            fprintf(stderr, "(terminal is IBM-3278)");
+            write(session_fd, options_msg, sizeof(options_msg));
+          }
+          else if (strncmp(suboption + 2, "IBM-3279", 8) == 0)
           {
             fprintf(stderr, "(terminal is IBM-3279)");
             write(session_fd, options_msg, sizeof(options_msg));
