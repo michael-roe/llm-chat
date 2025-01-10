@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <iconv.h>
 
 #define PORT 17002
 
@@ -123,6 +124,10 @@ unsigned char screen_update_msg[] =
     0x95,
     IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
 
+static iconv_t rx_conv;
+
+static iconv_t tx_conv;
+
 static int not_first_screen = 0;
 
 static int state;
@@ -156,6 +161,67 @@ void rx_suboption(int c)
 void end_suboption()
 {
   suboption[suboption_count] = '\0';
+}
+
+unsigned char translated[8192];
+
+void rx_record(int session_fd)
+{
+int i;
+size_t in_left;
+size_t out_left;
+char *in_ptr;
+char *out_ptr;
+
+  in_left = data_count;
+  out_left = sizeof(translated);
+  in_ptr = data;
+  out_ptr = translated;
+  /* do iconv */
+  iconv(rx_conv, &in_ptr, &in_left, &out_ptr, &out_left);
+  fprintf(stderr, "(data: ");
+  for (i=0; i<data_count; i++)
+  {
+    fprintf(stderr, "%02x ", data[i]);
+  }
+  fprintf(stderr, ") ");
+  for (i=0; i<sizeof(translated) - out_left; i++)
+  {
+    fprintf(stderr, "%c", translated[i]);
+  }
+  if (data_count > 0)
+  {
+    switch (data[0])
+    {
+      case IBM_AID_CLEAR:
+        fprintf(stderr, "[CLEAR]");
+        break;
+      case IBM_AID_PA1:
+        fprintf(stderr, "[PA1]");
+        break;
+      case IBM_AID_PA2:
+        fprintf(stderr, "[PA2]");
+        break;
+      case IBM_AID_PA3:
+        fprintf(stderr, "[PA3]");
+        break;
+      case IBM_AID_ENTER:
+        fprintf(stderr, "[ENTER]");
+        break;
+      case IBM_AID_PF1:
+        fprintf(stderr, "[PF1]");
+         break;
+     }
+  }
+  if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
+  {
+    write(session_fd, screen_msg, sizeof(screen_msg));
+  }
+  else
+  {
+    write(session_fd, screen_update_msg, sizeof(screen_update_msg));
+  }
+  data_count = 0;
 }
 
 void rx_byte(int c, int session_fd)
@@ -213,45 +279,7 @@ int i;
           break;
         case TELNET_EOR:
           fprintf(stderr, "[EOR]");
-          fprintf(stderr, "(data: ");
-          for (i=0; i<data_count; i++)
-          {
-            fprintf(stderr, "%02x ", data[i]);
-          }
-          fprintf(stderr, ") ");
-          if (data_count > 0)
-          {
-            switch (data[0])
-            {
-              case IBM_AID_CLEAR:
-                fprintf(stderr, "[CLEAR]");
-                break;
-              case IBM_AID_PA1:
-                fprintf(stderr, "[PA1]");
-                break;
-              case IBM_AID_PA2:
-                fprintf(stderr, "[PA2]");
-                break;
-              case IBM_AID_PA3:
-                fprintf(stderr, "[PA3]");
-                break;
-              case IBM_AID_ENTER:
-                fprintf(stderr, "[ENTER]");
-                break;
-              case IBM_AID_PF1:
-                fprintf(stderr, "[PF1]");
-                break;
-             }
-          }
-          if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
-          {
-            write(session_fd, screen_msg, sizeof(screen_msg));
-          }
-          else
-          {
-            write(session_fd, screen_update_msg, sizeof(screen_update_msg));
-          }
-          data_count = 0;
+          rx_record(session_fd);
           state = STATE_DATA;
           break;
         default:
@@ -340,6 +368,8 @@ int i;
               fprintf(stderr, "%c", suboption[i]);
             }
           }
+          tx_conv = iconv_open("CP500", "ISO_8859-1");
+          rx_conv = iconv_open("ISO_8859-1", "CP500");
           write(session_fd, options_msg, sizeof(options_msg));
         }
         if (suboption_count > 2)
