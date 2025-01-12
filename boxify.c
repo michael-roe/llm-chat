@@ -45,6 +45,8 @@
  * [csb] draws ].
  */
 
+static int text_in_buffer;
+
 static int text_width;
 
 wchar_t buff[128];
@@ -54,16 +56,18 @@ void boxify_start(int width)
 {
   text_width = width;
   out_ptr = buff;
+  text_in_buffer = 0;
 }
 
 void flush_para(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
 {
-  if (*ptr != buff)
+  if (text_in_buffer)
   {
     **ptr = '\0';
     callback(buff);
     *ptr = buff;
     **ptr = '\0';
+    text_in_buffer = 0;
   }
 }
 
@@ -83,8 +87,8 @@ int i;
   **ptr = '+';
   (*ptr)++;
   **ptr = '\0';
+  text_in_buffer = 1;
   flush_para(buff, ptr, callback);
-  *ptr = buff;
 }
 
 void do_box(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
@@ -111,7 +115,12 @@ wchar_t *in_ptr;
   if (*in_ptr == '\0')
   {
     flush_para(buff, &out_ptr, callback);
-    (*callback)(buff);
+    /*
+     * Force a blank line to be output by setting text_in_buffer,
+     * even though the buffer is empty.
+     */
+    text_in_buffer = 1;
+    flush_para(buff, &out_ptr, callback);
   }
 
   while (*in_ptr)
@@ -154,6 +163,7 @@ wchar_t *in_ptr;
       out_ptr++;
       *out_ptr = L' ';
       out_ptr++;
+      text_in_buffer = 1;
     }
     else if (wcsncmp(in_ptr, L"[/li]", 5) == 0)
     {
@@ -186,21 +196,24 @@ wchar_t *in_ptr;
       *out_ptr = L'[';
       in_ptr += 5;
       out_ptr++;
+      text_in_buffer = 1;
     }
     else if (wcsncmp(in_ptr, L"[csb]", 5) == 0)
     {
       *out_ptr = L']';
       out_ptr++;
       in_ptr += 5;
+      text_in_buffer = 1;
     }
     else
     {
       *out_ptr = *in_ptr;
       in_ptr++;
       out_ptr++;
+      text_in_buffer = 1;
     }
   }
-  if (out_ptr != buff)
+  if (text_in_buffer)
   {
     *out_ptr = L' ';
     out_ptr++;
