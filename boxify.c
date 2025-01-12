@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <wchar.h>
 
 #include "boxify.h"
@@ -45,9 +46,51 @@
  * [csb] draws ].
  */
 
-static int text_in_buffer;
-
 static int text_width;
+
+#define STACK_SIZE 20
+
+#define STACK_BOX 1
+#define STACK_LI  2
+#define STACK_UL  3
+#define STACK_OL  4
+
+struct stack_item {
+  int element;
+  int width;
+};
+
+static int stack_count;
+
+static struct stack_item boxify_stack[STACK_SIZE];
+
+static void boxify_push(int element, int new_width)
+{
+  if (stack_count >= STACK_SIZE)
+  {
+    fwprintf(stderr, L"Stack overflow\n");
+    exit(-1);
+  }
+  boxify_stack[stack_count].element = element;
+  boxify_stack[stack_count].width = text_width;
+  text_width = new_width;
+  stack_count++;
+  fwprintf(stderr, L"width = %d\n", text_width);
+}
+
+static void boxify_pop()
+{
+  if (stack_count == 0)
+  {
+    fwprintf(stderr, L"Stack underflow\n");
+    exit(-1);
+  }
+  stack_count--;
+  text_width = boxify_stack[stack_count].width;
+  fwprintf(stderr, L"width = %d\n", text_width);
+}
+ 
+static int text_in_buffer;
 
 wchar_t buff[128];
 wchar_t *out_ptr;
@@ -57,6 +100,7 @@ void boxify_start(int width)
   text_width = width;
   out_ptr = buff;
   text_in_buffer = 0;
+  stack_count = 0;
 }
 
 void flush_para(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
@@ -74,12 +118,22 @@ void flush_para(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
 void do_hr(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
 {
 int i;
+int width;
+
+  if (stack_count == 0)
+  {
+    width = text_width;
+  }
+  else
+  {
+    width = boxify_stack[stack_count - 1].width;
+  }
 
   flush_para(buff, ptr, callback);
 
   **ptr = (wchar_t) '+';
   (*ptr)++;
-  for (i=1; i<text_width - 1; i++)
+  for (i=1; i<width - 1; i++)
   {
     **ptr = (wchar_t) '-';
     (*ptr)++;
@@ -93,12 +147,14 @@ int i;
 
 void do_box(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
 {
+  boxify_push(STACK_BOX, text_width - 4);
   do_hr(buff, ptr, callback);
 }
 
 void do_end_box(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
 {
   do_hr(buff, ptr, callback);
+  boxify_pop();
 }
 
 void boxify_line(void (*callback)(wchar_t *str), wchar_t *str)
@@ -164,10 +220,12 @@ wchar_t *in_ptr;
       *out_ptr = L' ';
       out_ptr++;
       text_in_buffer = 1;
+      boxify_push(STACK_LI, text_width);
     }
     else if (wcsncmp(in_ptr, L"[/li]", 5) == 0)
     {
       in_ptr += 5;
+      boxify_pop();
       flush_para(buff, &out_ptr, callback);
     }
     else if (wcsncmp(in_ptr, L"[hr]", 4) == 0)
