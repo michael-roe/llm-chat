@@ -73,14 +73,17 @@ int i;
 
   flush_para(buff, ptr, callback);
 
-  (*ptr)[0] = (wchar_t) '+';
+  **ptr = (wchar_t) '+';
+  (*ptr)++;
   for (i=1; i<text_width - 1; i++)
   {
-    (*ptr)[i] = (wchar_t) '-';
+    **ptr = (wchar_t) '-';
+    (*ptr)++;
   }
-  (*ptr)[text_width - 1] = '+';
-  (*ptr)[text_width] = '\0';
-  (*callback)(buff);
+  **ptr = '+';
+  (*ptr)++;
+  **ptr = '\0';
+  flush_para(buff, ptr, callback);
   *ptr = buff;
 }
 
