@@ -75,7 +75,6 @@ static void boxify_push(int element, int new_width)
   boxify_stack[stack_count].width = text_width;
   text_width = new_width;
   stack_count++;
-  fwprintf(stderr, L"width = %d\n", text_width);
 }
 
 static void boxify_pop()
@@ -87,7 +86,6 @@ static void boxify_pop()
   }
   stack_count--;
   text_width = boxify_stack[stack_count].width;
-  fwprintf(stderr, L"width = %d\n", text_width);
 }
  
 static int text_in_buffer;
