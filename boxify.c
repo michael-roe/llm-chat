@@ -39,6 +39,10 @@
  * [b][/b] draws text in a bold face font.
  *
  * [i][/i] draws text in an italic font.
+ *
+ * [osb] draws [.
+ *
+ * [csb] draws ].
  */
 
 static int text_width;
@@ -129,6 +133,16 @@ wchar_t *in_ptr;
       in_ptr += 5;
       flush_para(buff, &out_ptr, callback);
     }
+    else if (wcsncmp(in_ptr, L"[ol]", 4) == 0)
+    {
+      in_ptr += 4;
+      flush_para(buff, &out_ptr, callback);
+    }
+    else if (wcsncmp(in_ptr, L"[/ol]", 5) == 0)
+    {
+      in_ptr += 5;
+      flush_para(buff, &out_ptr, callback);
+    }
     else if (wcsncmp(in_ptr, L"[li]", 4) == 0)
     {
       in_ptr += 4;
@@ -147,6 +161,34 @@ wchar_t *in_ptr;
     {
       in_ptr += 4;
       do_hr(buff, &out_ptr, callback);
+    }
+    else if (wcsncmp(in_ptr, L"[i]", 3) == 0)
+    {
+      in_ptr += 3;
+    }
+    else if (wcsncmp(in_ptr, L"[/i]", 4) == 0)
+    {
+      in_ptr += 4;
+    }
+    else if (wcsncmp(in_ptr, L"[b]", 3) == 0)
+    {
+      in_ptr += 3;
+    }
+    else if (wcsncmp(in_ptr, L"[/b]", 4) == 0)
+    {
+      in_ptr += 4;
+    }
+    else if (wcsncmp(in_ptr, L"[osb]", 5) == 0)
+    {
+      *out_ptr = L'[';
+      in_ptr += 5;
+      out_ptr++;
+    }
+    else if (wcsncmp(in_ptr, L"[csb]", 5) == 0)
+    {
+      *out_ptr = L']';
+      out_ptr++;
+      in_ptr += 5;
     }
     else
     {
