@@ -101,33 +101,60 @@ void boxify_start(int width)
   stack_count = 0;
 }
 
-void flush_para(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
+void line_prefix(wchar_t *buff, wchar_t **ptr, int internal)
+{
+int i;
+int to_do;
+
+  to_do = stack_count - internal;
+
+  if (0)
+  {
+    **ptr = '0' + internal;
+    (*ptr)++;
+  }
+
+  for (i=0; i<to_do; i++)
+  {
+    if (boxify_stack[i].element == STACK_BOX)
+    {
+      **ptr = '|';
+      (*ptr)++;
+      **ptr = ' ';
+      (*ptr)++;
+    }
+  }
+}
+
+void flush_para(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str),
+  int internal)
 {
   if (text_in_buffer)
   {
     **ptr = '\0';
     callback(buff);
     *ptr = buff;
-    **ptr = '\0';
+    line_prefix(buff, ptr, internal);
     text_in_buffer = 0;
   }
 }
 
-void do_hr(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
+void do_hr(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str),
+  int internal)
 {
 int i;
 int width;
 
-  if (stack_count == 0)
-  {
-    width = text_width;
-  }
-  else
+  if (internal && (stack_count > 0))
   {
     width = boxify_stack[stack_count - 1].width;
   }
+  else
+  {
+    width = text_width;
+  }
 
-  flush_para(buff, ptr, callback);
+  flush_para(buff, ptr, callback, internal);
 
   **ptr = (wchar_t) '+';
   (*ptr)++;
@@ -140,19 +167,19 @@ int width;
   (*ptr)++;
   **ptr = '\0';
   text_in_buffer = 1;
-  flush_para(buff, ptr, callback);
+  flush_para(buff, ptr, callback, 0);
 }
 
 void do_box(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
 {
   boxify_push(STACK_BOX, text_width - 4);
-  do_hr(buff, ptr, callback);
+  do_hr(buff, ptr, callback, 1);
 }
 
 void do_end_box(wchar_t *buff, wchar_t **ptr, void (*callback)(wchar_t *str))
 {
-  do_hr(buff, ptr, callback);
   boxify_pop();
+  do_hr(buff, ptr, callback, 0);
 }
 
 void boxify_line(void (*callback)(wchar_t *str), wchar_t *str)
@@ -168,13 +195,13 @@ wchar_t *in_ptr;
  
   if (*in_ptr == '\0')
   {
-    flush_para(buff, &out_ptr, callback);
+    flush_para(buff, &out_ptr, callback, 0);
     /*
      * Force a blank line to be output by setting text_in_buffer,
      * even though the buffer is empty.
      */
     text_in_buffer = 1;
-    flush_para(buff, &out_ptr, callback);
+    flush_para(buff, &out_ptr, callback, 0);
   }
 
   while (*in_ptr)
@@ -192,27 +219,27 @@ wchar_t *in_ptr;
     else if (wcsncmp(in_ptr, L"[ul]", 4) == 0)
     {
       in_ptr += 4;
-      flush_para(buff, &out_ptr, callback);
+      flush_para(buff, &out_ptr, callback, 0);
     }
     else if (wcsncmp(in_ptr, L"[/ul]", 5) == 0)
     {
       in_ptr += 5;
-      flush_para(buff, &out_ptr, callback);
+      flush_para(buff, &out_ptr, callback, 0);
     }
     else if (wcsncmp(in_ptr, L"[ol]", 4) == 0)
     {
       in_ptr += 4;
-      flush_para(buff, &out_ptr, callback);
+      flush_para(buff, &out_ptr, callback, 0);
     }
     else if (wcsncmp(in_ptr, L"[/ol]", 5) == 0)
     {
       in_ptr += 5;
-      flush_para(buff, &out_ptr, callback);
+      flush_para(buff, &out_ptr, callback, 0);
     }
     else if (wcsncmp(in_ptr, L"[li]", 4) == 0)
     {
       in_ptr += 4;
-      flush_para(buff, &out_ptr, callback);
+      flush_para(buff, &out_ptr, callback, 0);
       *out_ptr = L'*';
       out_ptr++;
       *out_ptr = L' ';
@@ -224,12 +251,12 @@ wchar_t *in_ptr;
     {
       in_ptr += 5;
       boxify_pop();
-      flush_para(buff, &out_ptr, callback);
+      flush_para(buff, &out_ptr, callback, 0);
     }
     else if (wcsncmp(in_ptr, L"[hr]", 4) == 0)
     {
       in_ptr += 4;
-      do_hr(buff, &out_ptr, callback);
+      do_hr(buff, &out_ptr, callback, 1);
     }
     else if (wcsncmp(in_ptr, L"[i]", 3) == 0)
     {
@@ -278,5 +305,5 @@ wchar_t *in_ptr;
 
 void boxify_end(void (*callback)(wchar_t *str))
 {
-  flush_para(buff, &out_ptr, callback);
+  flush_para(buff, &out_ptr, callback, 0);
 }
