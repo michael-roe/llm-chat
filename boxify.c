@@ -240,7 +240,7 @@ wchar_t *in_ptr;
     {
       in_ptr += 4;
       flush_para(buff, &out_ptr, callback, 0);
-      *out_ptr = L'*';
+      *out_ptr = 0x2022;
       out_ptr++;
       *out_ptr = L' ';
       out_ptr++;
