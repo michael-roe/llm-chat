@@ -100,6 +100,7 @@ void boxify_start(int width)
   out_ptr = buff;
   text_in_buffer = 0;
   stack_count = 0;
+  boxify_push(STACK_NULL, width);
 }
 
 void line_prefix(wchar_t *buff, wchar_t **ptr, int internal)
@@ -207,7 +208,40 @@ wchar_t *in_ptr;
 
   while (*in_ptr)
   {
-    if (wcsncmp(in_ptr, L"[box]", 5) == 0)
+    if (wcsncmp(in_ptr, L"[/code]", 7) == 0)
+    {
+      in_ptr += 7;
+      flush_para(buff, &out_ptr, callback, 0);
+      boxify_pop();
+    }
+    else if (wcsncmp(in_ptr, L"[osb]", 5) == 0)
+    {
+      *out_ptr = L'[';
+      in_ptr += 5;
+      out_ptr++;
+      text_in_buffer = 1;
+    }
+    else if (wcsncmp(in_ptr, L"[csb]", 5) == 0)
+    {
+      *out_ptr = L']';
+      out_ptr++;
+      in_ptr += 5;
+      text_in_buffer = 1;
+    }
+    else if ((boxify_stack[stack_count - 1].element == STACK_CODE) &&
+      (*in_ptr == L'['))
+    {
+      /*
+       * Inside a [code] block, open square bracket acts as just the
+       * character rather than the start of a tag, unless it's either
+       * part of [/code], [osb] or [csb].
+       */
+      *out_ptr = *in_ptr;
+      in_ptr++;
+      out_ptr++;
+      text_in_buffer = 1;
+    }
+    else if (wcsncmp(in_ptr, L"[box]", 5) == 0)
     {
       in_ptr += 5;
       do_box(buff, &out_ptr, callback);
@@ -216,6 +250,12 @@ wchar_t *in_ptr;
     {
       in_ptr += 6;
       do_end_box(buff, &out_ptr, callback);
+    }
+    else if (wcsncmp(in_ptr, L"[code]", 6) == 0)
+    {
+      in_ptr += 6;
+      flush_para(buff, &out_ptr, callback, 0);
+      boxify_push(STACK_CODE, text_width);
     }
     else if (wcsncmp(in_ptr, L"[ul]", 4) == 0)
     {
@@ -292,20 +332,6 @@ wchar_t *in_ptr;
     else if (wcsncmp(in_ptr, L"[/u]", 4) == 0)
     {
       in_ptr += 4;
-    }
-    else if (wcsncmp(in_ptr, L"[osb]", 5) == 0)
-    {
-      *out_ptr = L'[';
-      in_ptr += 5;
-      out_ptr++;
-      text_in_buffer = 1;
-    }
-    else if (wcsncmp(in_ptr, L"[csb]", 5) == 0)
-    {
-      *out_ptr = L']';
-      out_ptr++;
-      in_ptr += 5;
-      text_in_buffer = 1;
     }
     else
     {
