@@ -50,10 +50,11 @@ static int text_width;
 
 #define STACK_SIZE 20
 
-#define STACK_BOX 1
-#define STACK_LI  2
-#define STACK_UL  3
-#define STACK_OL  4
+#define STACK_NULL 0
+#define STACK_BOX  1
+#define STACK_LI   2
+#define STACK_LIST 3
+#define STACK_CODE 4
 
 struct stack_item {
   int element;
@@ -236,6 +237,16 @@ wchar_t *in_ptr;
       in_ptr += 5;
       flush_para(buff, &out_ptr, callback, 0);
     }
+    else if (wcsncmp(in_ptr, L"[list]", 6) == 0)
+    {
+      in_ptr += 6;
+      flush_para(buff, &out_ptr, callback, 0);
+    }
+    else if (wcsncmp(in_ptr, L"[/list]", 7) == 0)
+    {
+      in_ptr += 7;
+      flush_para(buff, &out_ptr, callback, 0);
+    }
     else if (wcsncmp(in_ptr, L"[li]", 4) == 0)
     {
       in_ptr += 4;
@@ -271,6 +282,14 @@ wchar_t *in_ptr;
       in_ptr += 3;
     }
     else if (wcsncmp(in_ptr, L"[/b]", 4) == 0)
+    {
+      in_ptr += 4;
+    }
+    else if (wcsncmp(in_ptr, L"[u]", 3) == 0)
+    {
+      in_ptr += 3;
+    }
+    else if (wcsncmp(in_ptr, L"[/u]", 4) == 0)
     {
       in_ptr += 4;
     }
