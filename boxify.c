@@ -343,8 +343,22 @@ wchar_t *in_ptr;
   }
   if (text_in_buffer)
   {
-    *out_ptr = L' ';
-    out_ptr++;
+    if (boxify_stack[stack_count - 1].element == STACK_CODE)
+    {
+      /*
+       * Inside a [code] block, a line break in the input results in a line
+       * break in the output.
+       */
+      flush_para(buff, &out_ptr, callback, 0);
+    }
+    else
+    {
+      /*
+       * Otherwise, new line is treated as white space.
+       */
+      *out_ptr = L' ';
+      out_ptr++;
+    }
   }
 }
 
