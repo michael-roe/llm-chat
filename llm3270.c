@@ -163,6 +163,39 @@ void end_suboption()
   suboption[suboption_count] = '\0';
 }
 
+/*
+ * The IBM 3270 encodes buffer addresses using 6 bits per printable
+ * character. This is similar to the Internet MIME encoding, except
+ * it's in EBCDIC with a different translation table.
+ */
+
+static char *ascii_bit_pack =
+  " ABCDEFGHI¢.<(+|&JKLMNOPQR!$*);¬-/STUVWXYZ¦,%_>?0123456789:#@'=\"";
+
+int buffer_address(char c1, char c2)
+{
+char *ptr1;
+char *ptr2;
+int index1;
+int index2;
+
+  ptr1 = strchr(ascii_bit_pack, c1);
+  if (ptr1 == NULL)
+  {
+    return  0;
+  }
+  index1 = ptr1 - ascii_bit_pack;
+
+  ptr2 = strchr(ascii_bit_pack, c2);
+  if (ptr2 == NULL)
+  {
+    return 0;
+  }
+  index2 = ptr2 - ascii_bit_pack;
+
+  return (index1 << 6) | index2;
+}
+
 unsigned char translated[8192];
 
 void rx_record(int session_fd)
@@ -219,6 +252,8 @@ char *out_ptr;
     if (data[i + 3] == IBM_SET_BUFFER_ADDRESS)
     {
       fprintf(stderr, "[SBA]");
+      fprintf(stderr, "(addr = %d)",
+        buffer_address(translated[i + 1], translated[i + 2]));
       i += 2; /* Skip the two bytes of buffer address */
     }
     else
