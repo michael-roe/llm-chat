@@ -228,13 +228,12 @@ void rx_byte(int c, int session_fd)
 {
 int i;
 
-  fprintf(stderr, "%02x ", c);
   switch (state)
   {
     case STATE_DATA:
       if (c == TELNET_IAC)
       {
-        fprintf(stderr, "[IAC]");
+        /* fprintf(stderr, "[IAC]"); */
         state = STATE_DATA_IAC;
       }
       else
@@ -278,7 +277,7 @@ int i;
           state = STATE_DATA;
           break;
         case TELNET_EOR:
-          fprintf(stderr, "[EOR]");
+          /* fprintf(stderr, "[EOR]"); */
           rx_record(session_fd);
           state = STATE_DATA;
           break;
@@ -319,7 +318,7 @@ int i;
     case STATE_OPT:
       if (c == TELNET_IAC)
       {
-        fprintf(stderr, "[IAC]");
+        /* fprintf(stderr, "[IAC]"); */
         state = STATE_OPT_IAC;
       }
       else
