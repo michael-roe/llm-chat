@@ -173,23 +173,11 @@ size_t out_left;
 char *in_ptr;
 char *out_ptr;
 
-  in_left = data_count;
-  out_left = sizeof(translated);
-  in_ptr = data;
-  out_ptr = translated;
-  /* do iconv */
-  iconv(rx_conv, &in_ptr, &in_left, &out_ptr, &out_left);
-  fprintf(stderr, "(data: ");
-  for (i=0; i<data_count; i++)
+  if (data_count == 0)
   {
-    fprintf(stderr, "%02x ", data[i]);
+    return;
   }
-  fprintf(stderr, ") ");
-  for (i=0; i<sizeof(translated) - out_left; i++)
-  {
-    fprintf(stderr, "%c", translated[i]);
-  }
-  if (data_count > 0)
+  else
   {
     switch (data[0])
     {
@@ -211,8 +199,34 @@ char *out_ptr;
       case IBM_AID_PF1:
         fprintf(stderr, "[PF1]");
          break;
+      default:
+        fprintf(stderr, "[AID %02x]", data[0]);
      }
   }
+  if (data_count < 4)
+  {
+    return;
+  }
+  in_left = data_count - 3;
+  out_left = sizeof(translated);
+  in_ptr = data + 3;
+  out_ptr = translated;
+  /* do iconv */
+  iconv(rx_conv, &in_ptr, &in_left, &out_ptr, &out_left);
+  fprintf(stderr, "(data: ");
+  for (i=0; i<data_count - 3; i++)
+  {
+    if (data[i + 3] == IBM_SET_BUFFER_ADDRESS)
+    {
+      fprintf(stderr, "[SBA]");
+      i += 2; /* Skip the two bytes of buffer address */
+    }
+    else
+    {
+      fprintf(stderr, "%02x/%c ", data[i + 3], translated[i]);
+    }
+  }
+  fprintf(stderr, ") ");
   if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
   {
     write(session_fd, screen_msg, sizeof(screen_msg));
