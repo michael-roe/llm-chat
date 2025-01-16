@@ -56,7 +56,9 @@
 #define IBM_GRAPHIC_ESCAPE 0x08
 #define IBM_SET_BUFFER_ADDRESS 0x11
 #define IBM_INSERT_CURSOR 0x13
+#define IBM_DUP 0x1c
 #define IBM_START_FIELD 0x1d
+#define IBM_FIELD_MARK 0x1e
 
 #define IBM_WCC_MDT 0x1
 #define IBM_WCC_GO_AHEAD 0x2
@@ -117,7 +119,12 @@ unsigned char screen_msg[] =
     IBM_START_FIELD, IBM_ATTR_PROTECTED,
     0xd3, 0x96, 0x87, 0x89, 0x95,
     IBM_START_FIELD, 0x40,
-    IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
+    IBM_INSERT_CURSOR,
+    0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40,
+    IBM_START_FIELD, 0x40,
+    0x40, 0x40, 0x40, 0x40, 0x40, 0x40,
+    IBM_START_FIELD, 0x40,
+    TELNET_IAC, TELNET_EOR};
 
 unsigned char screen_update_msg[] =
   {IBM_WRITE, IBM_WCC_PARITY | IBM_WCC_RESERVED | IBM_WCC_GO_AHEAD,
@@ -255,6 +262,19 @@ char *out_ptr;
       fprintf(stderr, "(addr = %d)",
         buffer_address(translated[i + 1], translated[i + 2]));
       i += 2; /* Skip the two bytes of buffer address */
+    }
+    else if (data[i + 3] == IBM_GRAPHIC_ESCAPE)
+    {
+      fprintf(stderr, "[GE]");
+       i += 1;
+    }
+    else if (data[i + 3] == IBM_DUP)
+    {
+      fprintf(stderr, "[DUP]");
+    }
+    else if (data[i + 3] == IBM_FIELD_MARK)
+    {
+      fprintf(stderr, "[FM]");
     }
     else
     {
