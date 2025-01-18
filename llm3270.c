@@ -98,11 +98,11 @@ unsigned char do_environ_msg[] =
 unsigned char environ_msg[] =
   {TELNET_IAC, TELNET_SB, TELNET_OPT_ENVIRON, TELNET_ENVIRON_SEND,
   TELNET_ENVIRON_USERVAR,
-  'K', 'B', 'D', 'T', 'Y', 'P', 'E',
-  TELNET_ENVIRON_USERVAR,
   'C', 'O', 'D', 'E', 'P', 'A', 'G', 'E',
   TELNET_ENVIRON_USERVAR,
   'C', 'H', 'A', 'R', 'S', 'E', 'T',
+  TELNET_ENVIRON_USERVAR,
+  'K', 'B', 'D', 'T', 'Y', 'P', 'E',
   /* 'U', 'S', 'E', 'R', */
   /* 'D', 'E', 'V', 'N', 'A', 'M', 'E', */
   TELNET_IAC, TELNET_SE};
@@ -358,13 +358,21 @@ int i;
     case STATE_WILL:
       if (c == TELNET_OPT_TERMINAL)
       {
-        fprintf(stderr, "[WILL TERMINAL-TYPE]");
+        /* fprintf(stderr, "[WILL TERMINAL-TYPE]"); */
         write(session_fd, terminal_msg, sizeof(terminal_msg));
       }
       else if (c == TELNET_OPT_ENVIRON)
       {
-        fprintf(stderr, "[WILL NEW-ENVIRON]");
+        /* fprintf(stderr, "[WILL NEW-ENVIRON]"); */
         write(session_fd, environ_msg, sizeof(environ_msg));
+      }
+      else if (c == TELNET_OPT_EOR)
+      {
+        /* fprintf(stderr, "[WILL EOR]"); */
+      }
+      else if (c == TELNET_OPT_BINARY)
+      {
+        /* fprintf(stderr, "[WILL BINARY]"); */
       }
       else
       {
@@ -377,7 +385,21 @@ int i;
       state = STATE_DATA;
       break;
     case STATE_DO:
-      fprintf(stderr, "[DO %02x]", c);
+      switch (c)
+      {
+        case TELNET_OPT_BINARY:
+          /* fprintf(stderr, "[DO BINARY]"); */
+          break;
+        case TELNET_OPT_GO_AHEAD:
+          /* fprintf(stderr, "[DO GA]"); */
+          break;
+        case TELNET_OPT_EOR:
+          /* fprintf(stderr, "[DO EOR]"); */
+          break;
+        default:
+          fprintf(stderr, "[DO %02x]", c);
+          break;
+      }
       state = STATE_DATA;
       break;
     case STATE_DONT:
@@ -408,24 +430,29 @@ int i;
         if ((suboption_count > 2) && (suboption[0] == TELNET_OPT_TERMINAL) &&
           (suboption[1] == TELNET_TERMINAL_IS))
         {
-          fprintf(stderr, "[TERMINAL-TYPE] [IS] %s", suboption + 2);
+          /* fprintf(stderr, "[TERMINAL-TYPE] [IS] %s", suboption + 2); */
           if (strncmp(suboption + 2, "IBM-3278", 8) == 0)
           {
-            fprintf(stderr, "(terminal is IBM-3278)");
+            /* fprintf(stderr, "(terminal is IBM-3278)"); */
             write(session_fd, do_environ_msg, sizeof(do_environ_msg));
           }
           else if (strncmp(suboption + 2, "IBM-3279", 8) == 0)
           {
-            fprintf(stderr, "(terminal is IBM-3279)");
+            /* fprintf(stderr, "(terminal is IBM-3279)"); */
             write(session_fd, do_environ_msg, sizeof(do_environ_msg));
+          }
+          else
+          {
+            fprintf(stderr, "(terminal is %s)", suboption + 2);
           }
         }
         else if ((suboption_count > 2) &&
           (suboption[0] == TELNET_OPT_ENVIRON) &&
           (suboption[1] == TELNET_ENVIRON_IS))
         {
-          fprintf(stderr, "[NEW-ENVIRON] [IS] ");
-          for (i=0; i<suboption_count; i++)
+          /* fprintf(stderr, "[NEW-ENVIRON] [IS] "); */
+#if 0
+          for (i=2; i<suboption_count; i++)
           {
             if (suboption[i] < 5)
             {
@@ -436,11 +463,18 @@ int i;
               fprintf(stderr, "%c", suboption[i]);
             }
           }
+#endif
+          if ((suboption[2] == TELNET_ENVIRON_USERVAR) &&
+            (strncmp(suboption + 3, "CODEPAGE", 8) == 0))
+          {
+            fprintf(stderr, "[CODEPAGE = %c%c%c]",
+              suboption[12], suboption[13], suboption[14]);
+          }
           tx_conv = iconv_open("CP500", "ISO_8859-1");
           rx_conv = iconv_open("ISO_8859-1", "CP500");
           write(session_fd, options_msg, sizeof(options_msg));
         }
-        if (suboption_count > 2)
+        else if (suboption_count > 2)
         {
           fprintf(stderr, "[%d] [%d] %s [SE]", suboption[0], suboption[1],
             suboption + 2);
