@@ -1,6 +1,8 @@
 #include <stdio.h>
+#include <wchar.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -131,6 +133,8 @@ unsigned char screen_update_msg[] =
     0x95,
     IBM_INSERT_CURSOR, TELNET_IAC, TELNET_EOR};
 
+static char codepage[8];
+
 static iconv_t rx_conv;
 
 static iconv_t tx_conv;
@@ -260,12 +264,12 @@ char *out_ptr;
     {
       fprintf(stderr, "[SBA]");
       fprintf(stderr, "(addr = %d)",
-        buffer_address(translated[i + 1], translated[i + 2]));
+        buffer_address(translated[2*i + 3], translated[2*i + 5]));
       i += 2; /* Skip the two bytes of buffer address */
     }
     else if (data[i + 3] == IBM_GRAPHIC_ESCAPE)
     {
-      fprintf(stderr, "[GE]");
+      fprintf(stderr, "[GE][%02x]", data[i + 4]);
        i += 1;
     }
     else if (data[i + 3] == IBM_DUP)
@@ -278,7 +282,9 @@ char *out_ptr;
     }
     else
     {
-      fprintf(stderr, "%02x/%c ", data[i + 3], translated[i]);
+      fprintf(stderr, "%02x/%c/%x ", data[i + 3], 
+       (translated[2*i] << 8) | translated[2*i + 1],
+       (translated[2*i] << 8) | translated[2*i + 1]);
     }
   }
   fprintf(stderr, ") ");
@@ -465,13 +471,25 @@ int i;
           }
 #endif
           if ((suboption[2] == TELNET_ENVIRON_USERVAR) &&
-            (strncmp(suboption + 3, "CODEPAGE", 8) == 0))
+            (strncmp(suboption + 3, "CODEPAGE", 8) == 0) &&
+            (suboption[11] == TELNET_ENVIRON_VALUE) &&
+            (suboption[12] != TELNET_ENVIRON_USERVAR)) 
           {
-            fprintf(stderr, "[CODEPAGE = %c%c%c]",
-              suboption[12], suboption[13], suboption[14]);
+            codepage[0] = 'C';
+            codepage[1] = 'P';
+            codepage[2] = suboption[12];
+            codepage[3] = suboption[13];
+            codepage[4] = suboption[14];
+            codepage[5] = '\0';
+            fprintf(stderr, "[%02x]", suboption[11]);
+            fprintf(stderr, "[CODEPAGE = %s]", codepage);
           }
-          tx_conv = iconv_open("CP500", "ISO_8859-1");
-          rx_conv = iconv_open("ISO_8859-1", "CP500");
+          else
+          {
+            strcpy(codepage, "CP500");
+          }
+          tx_conv = iconv_open(codepage, "UTF16BE");
+          rx_conv = iconv_open("UTF16BE", codepage);
           write(session_fd, options_msg, sizeof(options_msg));
         }
         else if (suboption_count > 2)
@@ -524,6 +542,8 @@ int session_fd;
 int addrlen;
 int i;
 struct sockaddr_in address;
+
+  setlocale(LC_ALL, getenv("LANG"));
 
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (server_fd < 0)
