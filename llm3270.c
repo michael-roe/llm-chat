@@ -226,25 +226,25 @@ char *out_ptr;
     switch (data[0])
     {
       case IBM_AID_CLEAR:
-        fprintf(stderr, "[CLEAR]");
+        fwprintf(stderr, L"[CLEAR]");
         break;
       case IBM_AID_PA1:
-        fprintf(stderr, "[PA1]");
+        fwprintf(stderr, L"[PA1]");
         break;
       case IBM_AID_PA2:
-        fprintf(stderr, "[PA2]");
+        fwprintf(stderr, L"[PA2]");
         break;
       case IBM_AID_PA3:
-        fprintf(stderr, "[PA3]");
+        fwprintf(stderr, L"[PA3]");
         break;
       case IBM_AID_ENTER:
-        fprintf(stderr, "[ENTER]");
+        fwprintf(stderr, L"[ENTER]");
         break;
       case IBM_AID_PF1:
-        fprintf(stderr, "[PF1]");
-         break;
+        fwprintf(stderr, L"[PF1]");
+        break;
       default:
-        fprintf(stderr, "[AID %02x]", data[0]);
+        fwprintf(stderr, L"[AID %02x]", data[0]);
      }
   }
   if (data_count < 4)
@@ -257,37 +257,38 @@ char *out_ptr;
   out_ptr = translated;
   /* do iconv */
   iconv(rx_conv, &in_ptr, &in_left, &out_ptr, &out_left);
-  fprintf(stderr, "(data: ");
+  fwprintf(stderr, L"(data: ");
   for (i=0; i<data_count - 3; i++)
   {
     if (data[i + 3] == IBM_SET_BUFFER_ADDRESS)
     {
-      fprintf(stderr, "[SBA]");
-      fprintf(stderr, "(addr = %d)",
+      fwprintf(stderr, L"[SBA]");
+      fwprintf(stderr, L"(addr = %d)",
         buffer_address(translated[2*i + 3], translated[2*i + 5]));
       i += 2; /* Skip the two bytes of buffer address */
     }
     else if (data[i + 3] == IBM_GRAPHIC_ESCAPE)
     {
-      fprintf(stderr, "[GE][%02x]", data[i + 4]);
+      fwprintf(stderr, L"[GE][%02x]", data[i + 4]);
        i += 1;
     }
     else if (data[i + 3] == IBM_DUP)
     {
-      fprintf(stderr, "[DUP]");
+      fwprintf(stderr, L"[DUP]");
     }
     else if (data[i + 3] == IBM_FIELD_MARK)
     {
-      fprintf(stderr, "[FM]");
+      fwprintf(stderr, L"[FM]");
     }
     else
     {
-      fprintf(stderr, "%02x/%c/%x ", data[i + 3], 
+      fwprintf(stderr, L"%02x/%lc/%x ", data[i + 3], 
        (translated[2*i] << 8) | translated[2*i + 1],
        (translated[2*i] << 8) | translated[2*i + 1]);
+      fflush(stderr);
     }
   }
-  fprintf(stderr, ") ");
+  fwprintf(stderr, L") ");
   if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
   {
     write(session_fd, screen_msg, sizeof(screen_msg));
@@ -339,7 +340,7 @@ int i;
           state = STATE_OPT;
           break;
         case TELNET_BREAK:
-          fprintf(stderr, "[BREAK]");
+          fwprintf(stderr, L"[BREAK]");
           if (not_first_screen)
           {
             write(session_fd, screen_update_msg, sizeof(screen_update_msg));
@@ -382,12 +383,12 @@ int i;
       }
       else
       {
-        fprintf(stderr, "[WILL %02x]", c);
+        fwprintf(stderr, L"[WILL %02x]", c);
       }
       state = STATE_DATA;
       break;
     case STATE_WONT:
-      fprintf(stderr, "[WONT %02x]", c);
+      fwprintf(stderr, L"[WONT %02x]", c);
       state = STATE_DATA;
       break;
     case STATE_DO:
@@ -403,13 +404,13 @@ int i;
           /* fprintf(stderr, "[DO EOR]"); */
           break;
         default:
-          fprintf(stderr, "[DO %02x]", c);
+          fwprintf(stderr, L"[DO %02x]", c);
           break;
       }
       state = STATE_DATA;
       break;
     case STATE_DONT:
-      fprintf(stderr, "[DONT %02x]", c);
+      fwprintf(stderr, L"[DONT %02x]", c);
       state = STATE_DATA;
       break;
     case STATE_OPT:
@@ -449,7 +450,7 @@ int i;
           }
           else
           {
-            fprintf(stderr, "(terminal is %s)", suboption + 2);
+            fwprintf(stderr, L"(terminal is %s)", suboption + 2);
           }
         }
         else if ((suboption_count > 2) &&
@@ -462,11 +463,11 @@ int i;
           {
             if (suboption[i] < 5)
             {
-              fprintf(stderr, "(%02x)", suboption[i]);
+              fwprintf(stderr, L"(%02x)", suboption[i]);
             }
             else
             {
-              fprintf(stderr, "%c", suboption[i]);
+              fwprintf(stderr, L"%c", suboption[i]);
             }
           }
 #endif
@@ -481,8 +482,8 @@ int i;
             codepage[3] = suboption[13];
             codepage[4] = suboption[14];
             codepage[5] = '\0';
-            fprintf(stderr, "[%02x]", suboption[11]);
-            fprintf(stderr, "[CODEPAGE = %s]", codepage);
+            /* fwprintf(stderr, L"[%02x]", suboption[11]); */
+            fwprintf(stderr, L"[CODEPAGE = %s]", codepage);
           }
           else
           {
@@ -494,16 +495,16 @@ int i;
         }
         else if (suboption_count > 2)
         {
-          fprintf(stderr, "[%d] [%d] %s [SE]", suboption[0], suboption[1],
+          fwprintf(stderr, L"[%d] [%d] %s [SE]", suboption[0], suboption[1],
             suboption + 2);
         }
         else if (suboption_count == 1)
         {
-          fprintf(stderr, "[%d] [SE]", suboption[0]);
+          fwprintf(stderr, L"[%d] [SE]", suboption[0]);
         }
         else
         {
-          fprintf(stderr, "[SE]");
+          fwprintf(stderr, L"[SE]");
         }
         suboption_count = 0;
         state = STATE_DATA;
@@ -548,14 +549,14 @@ struct sockaddr_in address;
   server_fd = socket(AF_INET, SOCK_STREAM, 0);
   if (server_fd < 0)
   {
-    fprintf(stderr, "socket failed\n");
+    fwprintf(stderr, L"socket failed\n");
     exit(-1);
   }
 
   if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
     &opt, sizeof(opt)) < 0)
   {
-    fprintf(stderr, "setsockopt failed\n");
+    fwprintf(stderr, L"setsockopt failed\n");
   }
 
   address.sin_family = AF_INET;
@@ -564,13 +565,13 @@ struct sockaddr_in address;
 
   if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
   {
-    fprintf(stderr, "bind failed\n");
+    fwprintf(stderr, L"bind failed\n");
     exit(-1);
   }
 
   if (listen(server_fd, 3) < 0)
   {
-    fprintf(stderr, "listen failed\n");
+    fwprintf(stderr, L"listen failed\n");
     exit(-1);
   }
 
@@ -578,13 +579,13 @@ struct sockaddr_in address;
 
   if (session_fd < 0)
   {
-    fprintf(stderr, "accept failed\n");
+    fwprintf(stderr, L"accept failed\n");
     exit(-1);
   }
 
   session(session_fd);
 
-  fprintf(stderr, "Done\n");
+  fwprintf(stderr, L"\nDone\n");
 
   return 0;
 }
