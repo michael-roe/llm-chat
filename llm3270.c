@@ -247,10 +247,23 @@ char *out_ptr;
         fwprintf(stderr, L"[AID %02x]", data[0]);
      }
   }
-  if (data_count < 4)
+  if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
   {
+    /*
+     * CLEAR is a "short read" and doesn't have data after it.
+     */
+    fwprintf(stderr, L"(redrawing the screen)");
+    fflush(stderr);
+    write(session_fd, screen_msg, sizeof(screen_msg));
     return;
   }
+  else if (data_count < 4)
+  {
+    fwprintf(stderr, L"(less than 4 bytes)");
+    fflush(stderr);
+    return;
+  }
+
   in_left = data_count - 3;
   out_left = sizeof(translated);
   in_ptr = data + 3;
@@ -289,14 +302,8 @@ char *out_ptr;
     }
   }
   fwprintf(stderr, L") ");
-  if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
-  {
-    write(session_fd, screen_msg, sizeof(screen_msg));
-  }
-  else
-  {
-    write(session_fd, screen_update_msg, sizeof(screen_update_msg));
-  }
+
+  write(session_fd, screen_update_msg, sizeof(screen_update_msg));
   data_count = 0;
 }
 
