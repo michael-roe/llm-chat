@@ -123,9 +123,11 @@ unsigned char screen_msg[] =
     IBM_START_FIELD, 0x40,
     IBM_INSERT_CURSOR,
     0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40, 0x40,
-    IBM_START_FIELD, 0x40,
+    IBM_START_FIELD, 0x40 | IBM_ATTR_NUMERIC,
     0x40, 0x40, 0x40, 0x40, 0x40, 0x40,
-    IBM_START_FIELD, 0x40,
+    IBM_START_FIELD, 0x40 | IBM_ATTR_DETECT,
+    0x6f,
+    IBM_START_FIELD, IBM_ATTR_PROTECTED,
     TELNET_IAC, TELNET_EOR};
 
 unsigned char screen_update_msg[] =
