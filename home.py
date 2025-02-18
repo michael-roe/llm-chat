@@ -120,12 +120,12 @@ class LightSet(BaseModel):
   area: str = pydantic.Field(
     description = 'Area of the house containing the light',
     default = '',
-    example = ['kitchen'])
+    examples = ['kitchen'])
 
   floor: str = pydantic.Field(
     description = 'Floor of the house containing the light',
     default = '',
-    example = ['ground'])
+    examples = ['ground'])
 
   brightness: int = pydantic.Field(
     description = 'New brightness as a percentage from 0 to 100',
@@ -134,8 +134,55 @@ class LightSet(BaseModel):
   color: str = pydantic.Field(
     description = 'New color of the light',
     default = '',
-    example = ['yellow'])
+    examples = ['yellow'])
 
   def __call__(self):
     print('LightSet called')
 
+class MediaPause(BaseModel):
+
+  '''Pause a media player'''
+
+  name: str = pydantic.Field(
+    description = 'Name of the media player',
+    default = '')
+
+  area: str = pydantic.Field(
+    description = 'Area of the house containing the media player',
+    default = '',
+    examples = ['bedroom'])
+
+class MediaUnpause(BaseModel):
+
+  '''Unpause a media player'''
+
+  name: str = pydantic.Field(
+    description = 'Name of the media player',
+    default = '')
+
+  area: str = pydantic.Field(
+    description = 'Area of the house containing the media player',
+    default = '',
+    examples = ['bedroom'])
+
+#
+# This is not a real device
+#
+# DeepSeek R1 invented it as an example device
+#
+
+class MassagerSet(BaseModel):
+
+  '''Set the intensity of a wellness massager'''
+
+  name: str = pydantic.Field(
+    description = 'Name of the device',
+    default = '')
+
+  area: str = pydantic.Field(
+    description = 'Area of the house containing the device',
+    default = '')
+
+  intensity: int = pydantic.Field(
+    description = 'New intensity as a percentage from 0 to 100')
+ 
