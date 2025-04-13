@@ -228,25 +228,25 @@ char *out_ptr;
     switch (data[0])
     {
       case IBM_AID_CLEAR:
-        fwprintf(stderr, L"[CLEAR]");
+        fwprintf(stderr, L"<CLEAR>");
         break;
       case IBM_AID_PA1:
-        fwprintf(stderr, L"[PA1]");
+        fwprintf(stderr, L"<PA1>");
         break;
       case IBM_AID_PA2:
-        fwprintf(stderr, L"[PA2]");
+        fwprintf(stderr, L"<PA2>");
         break;
       case IBM_AID_PA3:
-        fwprintf(stderr, L"[PA3]");
+        fwprintf(stderr, L"<PA3>");
         break;
       case IBM_AID_ENTER:
-        fwprintf(stderr, L"[ENTER]");
+        fwprintf(stderr, L"<ENTER>");
         break;
       case IBM_AID_PF1:
-        fwprintf(stderr, L"[PF1]");
+        fwprintf(stderr, L"<PF1>");
         break;
       default:
-        fwprintf(stderr, L"[AID %02x]", data[0]);
+        fwprintf(stderr, L"<AID id=%02x>", data[0]);
      }
   }
   if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
@@ -272,13 +272,11 @@ char *out_ptr;
   out_ptr = translated;
   /* do iconv */
   iconv(rx_conv, &in_ptr, &in_left, &out_ptr, &out_left);
-  fwprintf(stderr, L"(data: ");
   for (i=0; i<data_count - 3; i++)
   {
     if (data[i + 3] == IBM_SET_BUFFER_ADDRESS)
     {
-      fwprintf(stderr, L"[SBA]");
-      fwprintf(stderr, L"(addr = %d)",
+      fwprintf(stderr, L"<SBA addr=%d>",
         buffer_address(translated[2*i + 3], translated[2*i + 5]));
       i += 2; /* Skip the two bytes of buffer address */
     }
@@ -297,13 +295,11 @@ char *out_ptr;
     }
     else
     {
-      fwprintf(stderr, L"%02x/%lc/%x ", data[i + 3], 
-       (translated[2*i] << 8) | translated[2*i + 1],
+      fwprintf(stderr, L"%lc",
        (translated[2*i] << 8) | translated[2*i + 1]);
       fflush(stderr);
     }
   }
-  fwprintf(stderr, L") ");
 
   write(session_fd, screen_update_msg, sizeof(screen_update_msg));
   data_count = 0;
