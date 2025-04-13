@@ -350,6 +350,7 @@ int i;
           break;
         case TELNET_BREAK:
           fwprintf(stderr, L"[BREAK]");
+          fflush(stderr);
           if (not_first_screen)
           {
             write(session_fd, screen_update_msg, sizeof(screen_update_msg));
@@ -393,11 +394,13 @@ int i;
       else
       {
         fwprintf(stderr, L"[WILL %02x]", c);
+        fflush(stderr);
       }
       state = STATE_DATA;
       break;
     case STATE_WONT:
       fwprintf(stderr, L"[WONT %02x]", c);
+      fflush(stderr);
       state = STATE_DATA;
       break;
     case STATE_DO:
@@ -414,6 +417,7 @@ int i;
           break;
         default:
           fwprintf(stderr, L"[DO %02x]", c);
+          fflush(stderr);
           break;
       }
       state = STATE_DATA;
@@ -460,6 +464,7 @@ int i;
           else
           {
             fwprintf(stderr, L"(terminal is %s)", suboption + 2);
+            fflush(stderr);
           }
         }
         else if ((suboption_count > 2) &&
