@@ -471,7 +471,14 @@ char *out_ptr;
      */
     fwprintf(stderr, L"(redrawing the screen)");
     fflush(stderr);
-    write(session_fd, screen_msg, sizeof(screen_msg));
+    if (not_first_screen)
+    {
+      write(session_fd, screen_update_msg, sizeof(screen_update_msg));
+    }
+    else
+    {
+      write(session_fd, screen_msg, sizeof(screen_msg));
+    }
     return;
   }
   else if (data_count < 4)
@@ -481,6 +488,7 @@ char *out_ptr;
     return;
   }
 
+  not_first_screen = 1;
   in_left = data_count - 3;
   out_left = sizeof(translated);
   in_ptr = data + 3;
@@ -562,15 +570,8 @@ int i;
         case TELNET_BREAK:
           fwprintf(stderr, L"[BREAK]");
           fflush(stderr);
-          if (not_first_screen)
-          {
-            write(session_fd, screen_update_msg, sizeof(screen_update_msg));
-          }
-          else
-          {
-            write(session_fd, screen_msg, sizeof(screen_msg));
-            not_first_screen = 1;
-          }
+          not_first_screen = 0;
+          write(session_fd, screen_msg, sizeof(screen_msg));
           state = STATE_DATA;
           break;
         case TELNET_EOR:
