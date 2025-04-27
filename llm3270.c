@@ -81,6 +81,9 @@
 #define IBM_AID_CLEAR 0x6d
 #define IBM_AID_PA2 0x6e
 #define IBM_AID_PA3 0x6b
+#define IBM_AID_PF10 0x7a
+#define IBM_AID_PF11 0x7b
+#define IBM_AID_PF12 0x7c
 #define IBM_AID_ENTER 0x7d
 #define IBM_AID_PF1 0xf1
 #define IBM_AID_PF2 0xf2
@@ -91,9 +94,6 @@
 #define IBM_AID_PF7 0xf7
 #define IBM_AID_PF8 0xf8
 #define IBM_AID_PF9 0xf9
-#define IBM_AID_PF10 0xfa
-#define IBM_AID_PF11 0xfb
-#define IBM_AID_PF12 0xfc
 
 static wchar_t cp310[]  = {
 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 
@@ -446,6 +446,18 @@ char *out_ptr;
         break;
       case IBM_AID_PF8:
         fwprintf(stderr, L"<PF8>");
+        break;
+      case IBM_AID_PF9:
+        fwprintf(stderr, L"<PF9>");
+        break;
+      case IBM_AID_PF10:
+        fwprintf(stderr, L"<PF10>");
+        break;
+      case IBM_AID_PF11:
+        fwprintf(stderr, L"<PF11>");
+        break;
+      case IBM_AID_PF12:
+        fwprintf(stderr, L"<PF12>");
         break;
 
       default:
