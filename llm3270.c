@@ -86,6 +86,14 @@
 #define IBM_AID_PF2 0xf2
 #define IBM_AID_PF3 0xf3
 #define IBM_AID_PF4 0xf4
+#define IBM_AID_PF5 0xf5
+#define IBM_AID_PF6 0xf6
+#define IBM_AID_PF7 0xf7
+#define IBM_AID_PF8 0xf8
+#define IBM_AID_PF9 0xf9
+#define IBM_AID_PF10 0xfa
+#define IBM_AID_PF11 0xfb
+#define IBM_AID_PF12 0xfc
 
 static wchar_t cp310[]  = {
 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 
@@ -417,6 +425,15 @@ char *out_ptr;
         break;
       case IBM_AID_PF1:
         fwprintf(stderr, L"<PF1>");
+        break;
+      case IBM_AID_PF2:
+        fwprintf(stderr, L"<PF2>");
+        break;
+      case IBM_AID_PF3:
+        fwprintf(stderr, L"<PF3>");
+        break;
+      case IBM_AID_PF4:
+        fwprintf(stderr, L"<PF4>");
         break;
       default:
         fwprintf(stderr, L"<AID id=%02x>", data[0]);
