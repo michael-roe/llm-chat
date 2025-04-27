@@ -483,8 +483,16 @@ char *out_ptr;
   }
   else if (data_count < 4)
   {
-    fwprintf(stderr, L"(less than 4 bytes)");
-    fflush(stderr);
+    /* fwprintf(stderr, L"(less than 4 bytes)"); */
+    /* fflush(stderr); */
+    if (not_first_screen)
+    {
+      write(session_fd, screen_update_msg, sizeof(screen_update_msg));
+    }
+    else 
+    {
+      write(session_fd, screen_msg, sizeof(screen_msg));
+    }
     return;
   }
 
