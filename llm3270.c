@@ -435,6 +435,19 @@ char *out_ptr;
       case IBM_AID_PF4:
         fwprintf(stderr, L"<PF4>");
         break;
+      case IBM_AID_PF5:
+        fwprintf(stderr, L"<PF5>");
+        break;
+      case IBM_AID_PF6:
+        fwprintf(stderr, L"<PF6>");
+        break;
+      case IBM_AID_PF7:
+        fwprintf(stderr, L"<PF7>");
+        break;
+      case IBM_AID_PF8:
+        fwprintf(stderr, L"<PF8>");
+        break;
+
       default:
         fwprintf(stderr, L"<AID id=%02x>", data[0]);
      }
