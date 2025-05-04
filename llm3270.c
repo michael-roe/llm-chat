@@ -422,62 +422,63 @@ char *out_ptr;
   }
   else
   {
+    fwprintf(stdout, L"<SCREEN>");
     switch (data[0])
     {
       case IBM_AID_CLEAR:
-        fwprintf(stderr, L"<CLEAR>");
+        fwprintf(stdout, L"<CLEAR>");
         break;
       case IBM_AID_PA1:
-        fwprintf(stderr, L"<PA1>");
+        fwprintf(stdout, L"<PA1>");
         break;
       case IBM_AID_PA2:
-        fwprintf(stderr, L"<PA2>");
+        fwprintf(stdout, L"<PA2>");
         break;
       case IBM_AID_PA3:
-        fwprintf(stderr, L"<PA3>");
+        fwprintf(stdout, L"<PA3>");
         break;
       case IBM_AID_ENTER:
-        fwprintf(stderr, L"<ENTER>");
+        fwprintf(stdout, L"<ENTER>");
         break;
       case IBM_AID_PF1:
-        fwprintf(stderr, L"<PF1>");
+        fwprintf(stdout, L"<PF1>");
         break;
       case IBM_AID_PF2:
-        fwprintf(stderr, L"<PF2>");
+        fwprintf(stdout, L"<PF2>");
         break;
       case IBM_AID_PF3:
-        fwprintf(stderr, L"<PF3>");
+        fwprintf(stdout, L"<PF3>");
         break;
       case IBM_AID_PF4:
-        fwprintf(stderr, L"<PF4>");
+        fwprintf(stdout, L"<PF4>");
         break;
       case IBM_AID_PF5:
-        fwprintf(stderr, L"<PF5>");
+        fwprintf(stdout, L"<PF5>");
         break;
       case IBM_AID_PF6:
-        fwprintf(stderr, L"<PF6>");
+        fwprintf(stdout, L"<PF6>");
         break;
       case IBM_AID_PF7:
-        fwprintf(stderr, L"<PF7>");
+        fwprintf(stdout, L"<PF7>");
         break;
       case IBM_AID_PF8:
-        fwprintf(stderr, L"<PF8>");
+        fwprintf(stdout, L"<PF8>");
         break;
       case IBM_AID_PF9:
-        fwprintf(stderr, L"<PF9>");
+        fwprintf(stdout, L"<PF9>");
         break;
       case IBM_AID_PF10:
-        fwprintf(stderr, L"<PF10>");
+        fwprintf(stdout, L"<PF10>");
         break;
       case IBM_AID_PF11:
-        fwprintf(stderr, L"<PF11>");
+        fwprintf(stdout, L"<PF11>");
         break;
       case IBM_AID_PF12:
-        fwprintf(stderr, L"<PF12>");
+        fwprintf(stdout, L"<PF12>");
         break;
 
       default:
-        fwprintf(stderr, L"<AID id=%02x>", data[0]);
+        fwprintf(stdout, L"<AID id=%02x>", data[0]);
      }
   }
   if ((data_count > 0) && (data[0] == IBM_AID_CLEAR))
@@ -485,8 +486,8 @@ char *out_ptr;
     /*
      * CLEAR is a "short read" and doesn't have data after it.
      */
-    fwprintf(stderr, L"(redrawing the screen)");
-    fflush(stderr);
+    /* fwprintf(stderr, L"(redrawing the screen)"); */
+    /* fflush(stderr); */
     if (not_first_screen)
     {
       write(session_fd, screen_update_msg, sizeof(screen_update_msg));
@@ -495,6 +496,7 @@ char *out_ptr;
     {
       write(session_fd, screen_msg, sizeof(screen_msg));
     }
+    fwprintf(stdout, L"</SCREEN>\n");
     return;
   }
   else if (data_count < 4)
@@ -523,30 +525,32 @@ char *out_ptr;
   {
     if (data[i + 3] == IBM_SET_BUFFER_ADDRESS)
     {
-      fwprintf(stderr, L"<SBA addr=%d>",
+      fwprintf(stdout, L"<SBA addr=%d>",
         buffer_address(translated[2*i + 3], translated[2*i + 5]));
       i += 2; /* Skip the two bytes of buffer address */
     }
     else if (data[i + 3] == IBM_GRAPHIC_ESCAPE)
     {
-      fwprintf(stderr, L"%lc", cp310[data[i + 4]]);
+      fwprintf(stdout, L"%lc", cp310[data[i + 4]]);
        i += 1;
     }
     else if (data[i + 3] == IBM_DUP)
     {
-      fwprintf(stderr, L"<DUP>");
+      fwprintf(stdout, L"<DUP>");
     }
     else if (data[i + 3] == IBM_FIELD_MARK)
     {
-      fwprintf(stderr, L"<FM>");
+      fwprintf(stdout, L"<FM>");
     }
     else
     {
-      fwprintf(stderr, L"%lc",
+      fwprintf(stdout, L"%lc",
        (translated[2*i] << 8) | translated[2*i + 1]);
       fflush(stderr);
     }
   }
+
+  fwprintf(stdout, L"</SCREEN>\n");
 
   write(session_fd, screen_update_msg, sizeof(screen_update_msg));
   data_count = 0;
@@ -592,8 +596,8 @@ int i;
           state = STATE_OPT;
           break;
         case TELNET_BREAK:
-          fwprintf(stderr, L"[BREAK]");
-          fflush(stderr);
+          /* fwprintf(stderr, L"[BREAK]"); */
+          /* fflush(stderr); */
           not_first_screen = 0;
           write(session_fd, screen_msg, sizeof(screen_msg));
           state = STATE_DATA;
@@ -732,8 +736,7 @@ int i;
             codepage[3] = suboption[13];
             codepage[4] = suboption[14];
             codepage[5] = '\0';
-            /* fwprintf(stderr, L"[%02x]", suboption[11]); */
-            fwprintf(stderr, L"[CODEPAGE = %s]", codepage);
+            /* fwprintf(stderr, L"[CODEPAGE = %s]", codepage); */
           }
           else
           {
