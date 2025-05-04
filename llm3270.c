@@ -415,6 +415,7 @@ size_t in_left;
 size_t out_left;
 char *in_ptr;
 char *out_ptr;
+wchar_t c;
 
   if (data_count == 0)
   {
@@ -501,8 +502,8 @@ char *out_ptr;
   }
   else if (data_count < 4)
   {
-    /* fwprintf(stderr, L"(less than 4 bytes)"); */
-    /* fflush(stderr); */
+    fwprintf(stderr, L"(less than 4 bytes)"); 
+    fflush(stderr);
     if (not_first_screen)
     {
       write(session_fd, screen_update_msg, sizeof(screen_update_msg));
@@ -511,6 +512,7 @@ char *out_ptr;
     {
       write(session_fd, screen_msg, sizeof(screen_msg));
     }
+    fwprintf(stdout, L"</SCREEN>\n");
     return;
   }
 
@@ -544,13 +546,29 @@ char *out_ptr;
     }
     else
     {
-      fwprintf(stdout, L"%lc",
-       (translated[2*i] << 8) | translated[2*i + 1]);
+      c = (translated[2*i] << 8) | translated[2*i + 1];
+      if (c == '<')
+      {
+        fwprintf(stdout, L"&lt;");
+      }
+      else if (c == '>')
+      {
+        fwprintf(stdout, L"&gt;");
+      }
+      else if (c == '"')
+      {
+        fwprintf(stdout, L"&quot;");
+      }
+      else
+      {
+        fwprintf(stdout, L"%lc", c);
+      }
       fflush(stderr);
     }
   }
 
   fwprintf(stdout, L"</SCREEN>\n");
+  fflush(stdout);
 
   write(session_fd, screen_update_msg, sizeof(screen_update_msg));
   data_count = 0;
