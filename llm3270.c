@@ -379,8 +379,36 @@ void end_suboption()
  * it's in EBCDIC with a different translation table.
  */
 
-static char *ascii_bit_pack =
-  " ABCDEFGHI¢.<(+|&JKLMNOPQR!$*);¬-/STUVWXYZ¦,%_>?0123456789:#@'=\"";
+/*
+ * This lookup table is in ISO 8859-1, not UTF-8, so it is
+ * not safe to represent it as a string constant.
+ */
+
+static int ascii_bit_pack[] = {
+  ' ', 'A', 'B', 'C', 'D', 'E', 'F', 'G',
+  'H', 'I', 0xa2, '.', '<', '(', '+', '|',
+  '&', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+  'Q', 'R', '!', '$', '*', ')', ';', 0xac,
+  '-', '/', 'S', 'T', 'U', 'V', 'W', 'X',
+  'Y', 'Z', 0xa6, ',', '%', '_', '>', '?',
+  '0', '1', '2', '3', '4', '5', '6', '7',
+  '8', '9', ':', '#', '@', '\'', '=', '"' 
+};
+
+
+static int unpack_char(char c)
+{
+int i;
+
+  i = 0;
+  while (i < 64)
+  {
+    if (c == ascii_bit_pack[i])
+      return i;
+    i++;
+  }
+  return 0;
+}
 
 int buffer_address(char c1, char c2)
 {
@@ -388,20 +416,10 @@ char *ptr1;
 char *ptr2;
 int index1;
 int index2;
+int i;
 
-  ptr1 = strchr(ascii_bit_pack, c1);
-  if (ptr1 == NULL)
-  {
-    return  0;
-  }
-  index1 = ptr1 - ascii_bit_pack;
-
-  ptr2 = strchr(ascii_bit_pack, c2);
-  if (ptr2 == NULL)
-  {
-    return 0;
-  }
-  index2 = ptr2 - ascii_bit_pack;
+  index1 = unpack_char(c1);
+  index2 = unpack_char(c2);
 
   return (index1 << 6) | index2;
 }
@@ -416,6 +434,7 @@ size_t out_left;
 char *in_ptr;
 char *out_ptr;
 wchar_t c;
+int addr;
 
   if (data_count == 0)
   {
@@ -527,8 +546,8 @@ wchar_t c;
   {
     if (data[i + 3] == IBM_SET_BUFFER_ADDRESS)
     {
-      fwprintf(stdout, L"<SBA addr=%d>",
-        buffer_address(translated[2*i + 3], translated[2*i + 5]));
+      addr = buffer_address(translated[2*i + 3], translated[2*i + 5]);
+      fwprintf(stdout, L"<SBA x=%d y=%d>", addr%80, addr/80);
       i += 2; /* Skip the two bytes of buffer address */
     }
     else if (data[i + 3] == IBM_GRAPHIC_ESCAPE)
