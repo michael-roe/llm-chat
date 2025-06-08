@@ -6,3 +6,6 @@ llm3270: llm3270.c
 
 sba: sba.c
 	gcc -o sba sba.c
+
+poetry: poetry.c
+	gcc -o poetry poetry.c
