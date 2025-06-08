@@ -469,6 +469,7 @@ char *in_ptr;
 char *out_ptr;
 wchar_t c;
 int addr;
+int field_started;
 
   if (data_count == 0)
   {
@@ -576,12 +577,18 @@ int addr;
   out_ptr = translated;
   /* do iconv */
   iconv(rx_conv, &in_ptr, &in_left, &out_ptr, &out_left);
+  field_started = 0;
   for (i=0; i<data_count - 3; i++)
   {
     if (data[i + 3] == IBM_SET_BUFFER_ADDRESS)
     {
+      if (field_started)
+      {
+        fwprintf(stdout, L"</FIELD>");
+      }
+      field_started = 1;
       addr = buffer_address(translated[2*i + 3], translated[2*i + 5]);
-      fwprintf(stdout, L"<SBA x=%d y=%d>", addr%80, addr/80);
+      fwprintf(stdout, L"<FIELD x=\"%d\" y=\"%d\">", addr%80, addr/80);
       i += 2; /* Skip the two bytes of buffer address */
     }
     else if (data[i + 3] == IBM_GRAPHIC_ESCAPE)
@@ -620,6 +627,10 @@ int addr;
     }
   }
 
+  if (field_started)
+  {
+    fwprintf(stdout, L"</FIELD>");
+  }
   fwprintf(stdout, L"</SCREEN>\n");
   fflush(stdout);
 
