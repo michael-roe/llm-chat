@@ -3,8 +3,10 @@ import os
 import openai
 import json
 
-client = openai.OpenAI(api_key=os.environ.get("GLHF_API_KEY"),
+client = openai.OpenAI(api_key=os.environ.get("SYNTHETIC_API_KEY"),
   base_url="https://glhf.chat/api/openai/v1")
+
+use_tools = False
 
 #
 # Examples of models
@@ -12,9 +14,10 @@ client = openai.OpenAI(api_key=os.environ.get("GLHF_API_KEY"),
 
 # model_name = "hf:meta-llama/Meta-Llama-3.1-70B-Instruct"
 # model_name = "hf:meta-llama/Meta-Llama-3.1-8B-Instruct"
-model_name = "hf:nousresearch/Hermes-3-Llama-3.1-8B"
+# model_name = "hf:nousresearch/Hermes-3-Llama-3.1-8B"
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-70B"
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-8B"
+model_name = "hf:deepseek-ai/DeepSeek-R1-0528"
 
 
 #
@@ -22,8 +25,11 @@ model_name = "hf:nousresearch/Hermes-3-Llama-3.1-8B"
 # (and which model they were used with)
 #
 
+system_msg = "You are a roleplay AI."
+# DeepSeek-R1-0528 
+
 #system_msg = "You are a helpful assistant."
-system_msg = "You are a function calling AI model."
+# system_msg = "You are a function calling AI model."
 # Meta-Llama-3.1-70B
 
 # system_msg = "Roleplay as a bombastic alchemist from the 17th century in \
@@ -75,8 +81,8 @@ tools = [
 #
 
 # user_msg = "Are you ready to embark?"
-
-user_msg = "What is the weather in Cambridge, England?"
+# user_msg = "What is the weather in Cambridge, England?"
+user_msg = "Who are you?"
 
 print("Model: ", end="")
 print(model_name)
@@ -100,24 +106,34 @@ history = [
 # print(history)
 # print()
 
-completion = client.chat.completions.create(
-    model=model_name,
-    messages=history,
-    tools=tools,
-    tool_choice={"type": "function", "function": {"name": "get_weather"}}
-    )
+if use_tools:
+  completion = client.chat.completions.create(
+      model=model_name,
+      messages=history,
+      tools=tools,
+      tool_choice={"type": "function", "function": {"name": "get_weather"}}
+      )
+else:
+  completion = client.chat.completions.create(
+      model=model_name,
+      messages=history,
+      )
 
 
+
+print("Received completion from server")
 print(completion.choices[0].message)
+print()
 print()
 
 history.append(completion.choices[0].message)
 
 if completion.choices[0].message.tool_calls:
+    print("tool call")
     # print(completion.choices[0].message.tool_calls[0].id)
-    # print("function name = ", end="")
-    # print(completion.choices[0].message.tool_calls[0].function.name)
-    # print(completion.choices[0].message.tool_calls[0].function.arguments)
+    print("function name = ", end="")
+    print(completion.choices[0].message.tool_calls[0].function.name)
+    print(completion.choices[0].message.tool_calls[0].function.arguments)
     toolarg = json.loads(completion.choices[0].message.tool_calls[0].function.arguments)
     history.append({
         "role": "tool",
