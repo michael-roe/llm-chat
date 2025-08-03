@@ -35,6 +35,11 @@ wchar_t *cp;
         cp++;
       }
 
+      /*
+       * TO DO: This white space removal is too aggresive, it will remove
+       * spaces before italics.
+       */
+
       /* Remove trailing white space */
       cp--;
       while (*cp == ' ')
@@ -49,6 +54,10 @@ wchar_t *cp;
       {
         cp++;
       }
+      /*
+       * TO DO: Should escape JSON special characters, espcially double quote
+       */ 
+
       wprintf(L"%ls", cp);
     }
   }
@@ -58,7 +67,9 @@ void parse_message(xmlNode *node)
 {
 xmlNode *current;
 xmlChar *role;
+int first;
 
+  first = 1;
   for (current = node; current; current = current->next)
   {
     if (current->type == XML_ELEMENT_NODE)
@@ -69,9 +80,17 @@ xmlChar *role;
         exit(-1);
       }
       role = xmlGetProp(current, "role");
-      wprintf(L"<msg role=\"%s\">", role);
+      if (first == 0)
+      {
+        wprintf(L", ");
+      }
+      else
+      {
+        first = 0;
+      }
+      wprintf(L"{\"role\":\"%s\", \"content\":\"", role);
       walk_tree(current->children);
-      wprintf(L"</msg>");
+      wprintf(L"\"}");
     }
   }
 }  
@@ -80,7 +99,6 @@ void parse_session(xmlNode *node)
 {
 xmlNode *current;
 
-  wprintf(L"<?xml version=\"1.0\"?>");
   for (current = node; current; current = current->next)
   {
     if (current->type == XML_ELEMENT_NODE)
@@ -90,9 +108,9 @@ xmlNode *current;
         fwprintf(stderr, L"Expected <session>, found <%s>.\n", current->name);
         exit(-1);
       }
-      wprintf(L"<session>");
+      wprintf(L"{\"messages\":[");
       parse_message(current->children);
-      wprintf(L"</session>");
+      wprintf(L"]}");
     }
   }
 }
