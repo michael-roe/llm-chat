@@ -7,6 +7,87 @@
 
 static wchar_t buff[8*1024];
 
+
+/*
+ * Print out the string, escaping both XML and JSON special characters.
+ * The effect should as if the string is first XML encoded, and then
+ * JSON encoded.
+ *
+ * Single quote is only a special character if we're printing out the value
+ * of an XML attribute that is enclosed within single quotation marks.
+ */
+
+void escape_xml_json(wchar_t *str, int escape_apos)
+{
+wchar_t *cp;
+
+  cp = str;
+  while (*cp)
+  {
+    if (*cp == '<')
+    {
+      wprintf(L"&lt;");
+    }
+    else if (*cp == '>')
+    {
+      wprintf(L"&gt;");
+    }
+    else if (*cp == '&')
+    {
+      wprintf(L"&amp;");
+    }
+    else if (*cp == 0xA0)
+    {
+      wprintf(L"&#%02X;", *cp); /* &nbsp; isn't really a special character */
+    }
+    else if ((*cp == '\'') && escape_apos)
+    {
+      wprintf(L"&apos;");
+    } 
+    else if (*cp == '\\')
+    {
+      wprintf(L"\\\\");
+    }
+    else if (*cp == '"')
+    {
+      wprintf(L"\\\"");
+    }
+    else if (*cp == '\n')
+    {
+      /*
+       * Newline usually won't occur, because all white space will have been
+       * converted to spaces before this routine is called. Handle newline
+       * in case this routine is called from somewhere that doesn't do that.
+       */
+
+      wprintf(L"\\n");
+    }
+    else if (*cp == '\t')
+    {
+      wprintf(L"\\t");
+    }
+    else if (*cp == '\r')
+    {
+      wprintf(L"\\r");
+    }
+    else if (*cp < 0x20)
+    {
+      /*
+       * This case shouldn't be reached, because all the control characters
+       * that are allowed in XML have been handled above. Handle this case
+       * just in case something unexpected happens.
+       */
+
+      wprintf(L"&#x%02X", *cp);
+    }
+    else
+    {
+      wprintf(L"%lc", *cp);
+    }
+    cp++;
+  }
+}
+
 void walk_tree(xmlNode *node)
 {
 xmlNode *current;
@@ -58,7 +139,7 @@ wchar_t *cp;
        * TO DO: Should escape JSON special characters, espcially double quote
        */ 
 
-      wprintf(L"%ls", cp);
+      escape_xml_json(cp, 0);
     }
   }
 }
