@@ -7,6 +7,8 @@
 
 static wchar_t buff[8*1024];
 
+static wchar_t attr_buff[128];
+
 
 /*
  * Print out the string, escaping both XML and JSON special characters.
@@ -92,13 +94,23 @@ void walk_tree(xmlNode *node)
 {
 xmlNode *current;
 xmlChar *role;
+xmlChar *attr_lang;
 wchar_t *cp;
 
   for (current = node; current; current = current->next)
   {
     if (current->type == XML_ELEMENT_NODE)
     {
-      wprintf(L"<%s>", current->name);
+      wprintf(L"<%s", current->name);
+      attr_lang = xmlGetProp(current, "lang");
+      if (attr_lang)
+      {
+        mbstowcs(attr_buff, attr_lang, sizeof(attr_buff));
+        wprintf(L" xml:lang='");
+        escape_xml_json(attr_buff, 1);
+        wprintf(L"'");
+      }
+      wprintf(L">");
       walk_tree(current->children);
       wprintf(L"</%s>", current->name);
     }
@@ -135,9 +147,6 @@ wchar_t *cp;
       {
         cp++;
       }
-      /*
-       * TO DO: Should escape JSON special characters, espcially double quote
-       */ 
 
       escape_xml_json(cp, 0);
     }
