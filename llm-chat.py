@@ -6,17 +6,19 @@ import json
 client = openai.OpenAI(api_key=os.environ.get("SYNTHETIC_API_KEY"),
   base_url="https://glhf.chat/api/openai/v1")
 
-use_tools = False
+use_tools = True
 
 #
 # Examples of models
 #
 
 # model_name = "hf:meta-llama/Meta-Llama-3.1-70B-Instruct"
+# model_name = "hf:meta-llama/Meta-Llama-3.3-70B-Instruct"
 # model_name = "hf:meta-llama/Meta-Llama-3.1-8B-Instruct"
 # model_name = "hf:nousresearch/Hermes-3-Llama-3.1-8B"
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-70B"
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-8B"
+# model_name = "hf:nousresearch/Nous-Hermes-2-Mixtral-8x7B-DPO"
 model_name = "hf:deepseek-ai/DeepSeek-R1-0528"
 
 
@@ -25,7 +27,8 @@ model_name = "hf:deepseek-ai/DeepSeek-R1-0528"
 # (and which model they were used with)
 #
 
-system_msg = "You are a roleplay AI."
+# system_msg = "You are a roleplay AI."
+system_msg = ""
 # DeepSeek-R1-0528 
 
 #system_msg = "You are a helpful assistant."
@@ -81,8 +84,8 @@ tools = [
 #
 
 # user_msg = "Are you ready to embark?"
-# user_msg = "What is the weather in Cambridge, England?"
-user_msg = "Who are you?"
+user_msg = "What is the weather in Cambridge, England?"
+# user_msg = "Who are you?"
 
 print("Model: ", end="")
 print(model_name)
@@ -138,7 +141,7 @@ if completion.choices[0].message.tool_calls:
     history.append({
         "role": "tool",
         "tool_call_id": completion.choices[0].message.tool_calls[0].id,
-        "content": '{"value":5.0, "units": "Cel"}'
+        "content": '{"temperature":{"value":20.0, "units": "Cel"}}'
     })
     completion = client.chat.completions.create(
         model=model_name,
