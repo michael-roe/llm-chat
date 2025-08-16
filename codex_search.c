@@ -1,7 +1,10 @@
 #include <mysql/mysql.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include <locale.h>
+#include "codex.h"
 
 static wchar_t name_wcs[256];
 static char escaped[256];
@@ -15,22 +18,40 @@ int main(int argc, char **argv)
   char *user;
   char *password;
   int not_first;
+  int opt;
+  int json_mode;
 
   setlocale(LC_ALL, getenv("LANG"));
 
-  if (argc < 2)
+  json_mode = 0;
+
+  while ((opt = getopt(argc, argv, "j")) != -1)
   {
-    fprintf(stderr, "Usage: codex_search <name>\n");
+    switch (opt)
+    {
+      case 'j':
+        json_mode = 1;
+        break;
+      default:
+        fprintf(stderr, "Usage: codex_search [-j] <name>\n");
+        exit(-1);
+    }
+  }
+
+  if (optind >= argc) 
+  {
+    fprintf(stderr, "Usage: codex_search [-j] <name>\n");
     exit(-1);
   }
 
-  if (2*strlen(argv[1]) + 1 > sizeof(escaped))
+
+  if (2*strlen(argv[optind]) + 1 > sizeof(escaped))
   {
     fprintf(stderr, "Name is too long.\n");
     exit(-1);
   }
 
-  mbstowcs(name_wcs, argv[1], sizeof(name_wcs));
+  mbstowcs(name_wcs, argv[optind], sizeof(name_wcs));
 
   /*
    * Check that the name complies with the business rules for the database.
@@ -75,8 +96,8 @@ int main(int argc, char **argv)
    * so the buffer must be large enough to prevent buffer overflow attacks.
    */
 
-  mysql_real_escape_string_quote(conn, escaped, argv[1],
-    strlen(argv[1]), '\'');
+  mysql_real_escape_string_quote(conn, escaped, argv[optind],
+    strlen(argv[optind]), '\'');
 
   snprintf(query, sizeof(query),
     "SELECT character_name, description FROM train WHERE character_name LIKE '%%%s%%';",
@@ -97,20 +118,57 @@ int main(int argc, char **argv)
     exit(-1);
   }
 
+  if (json_mode)
+  {
+    printf("[");
+  }
+
   not_first = 0;
   while ((row = mysql_fetch_row(res)) != NULL)
   {
     if (not_first)
     {
-      printf("\n");
+      if (json_mode)
+      {
+        printf(", ");
+      }
+      else
+      {
+        printf("\n");
+      }
     }
     else
     {
       not_first = 1;
     }
-    printf("%s\n\n%s\n", 
-      row[0] ? row[0] : "NULL",
-      row[1] ? row[1] : "NULL");
+
+    if (json_mode)
+    {
+      /*
+       * We need to escape JSON special characters here, especially quotes.
+       */
+
+      printf("{");
+      if (row[0])
+      {
+        printf("\"character_name\":\"%s\", ", row[0]);
+      }
+      if (row[1])
+      {
+        printf("\"description\":\"%s\"", row[1]);
+      }
+      printf("}");
+    }
+    else
+    {
+      printf("%s\n\n", row[0] ? row[0] : "NULL");
+      printf("%s\n", row[1] ? row[1] : "NULL");
+    }
+  }
+
+  if (json_mode)
+  {
+    printf("]\n");
   }
   
   mysql_close(conn);
