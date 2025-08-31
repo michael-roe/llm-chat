@@ -19,6 +19,7 @@ use_tools = True
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-70B"
 # model_name = "hf:nousresearch/Hermes-2-Theta-Llama-3-8B"
 # model_name = "hf:nousresearch/Nous-Hermes-2-Mixtral-8x7B-DPO"
+# model_name = "hf:nousresearch/Hermes-4-70B"
 model_name = "hf:deepseek-ai/DeepSeek-R1-0528"
 
 
@@ -141,6 +142,7 @@ if completion.choices[0].message.tool_calls:
     history.append({
         "role": "tool",
         "tool_call_id": completion.choices[0].message.tool_calls[0].id,
+        # "content" : "<list><item><place>Cambridge, <country>England</country></place></item><label>Temperature</label><item><measure unit='Celsius'>19.0</measure></item><label>Humidity</label><item><measure unit='percent'>68</measure></item></list>"
         "content": '{"temperature":{"value":20.0, "units": "Cel"}}'
     })
     completion = client.chat.completions.create(
