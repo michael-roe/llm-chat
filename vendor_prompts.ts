@@ -22,6 +22,10 @@ const server = new McpServer({
 });
 
 //
+// Tools
+//
+
+//
 // Deep Research MCP clients expect the server to provide tools called
 // "search" and "fetch".
 //
@@ -85,6 +89,63 @@ server.registerTool("get_weather",
   })
 );
 
+//
+// Prompts
+//
+
+server.registerPrompt(
+  "hermes4_system_default",
+  {
+    title: "Hermes 4 Default System Prompt",
+    description: "Default system prompt for Hermes 4",
+    argsSchema: { reasoning: z.string() }
+  },
+  ({ reasoning }) => ({
+    messages: [{
+      role: "user", // Should be "system"
+      content: {
+        type: "text",
+        text: "You are Hermes, created by Nous Research."
+      }
+    }]
+  })
+);
+
+server.registerPrompt(
+  "hermes4_system_reasoning",
+  {
+    title: "Hermes 4 Reasoning System Prompt",
+    description: "System prompt to enable chain of thought in Hermes 4.",
+    argsSchema: { reasoning: z.string() }
+  },
+  ({ reasoning }) => ({
+    messages: [{
+      role: "user", // Should be "system"
+      content: {
+        type: "text",
+        text: "You are a deep thinking AI, you may use extremely long chains of thought to deeply consider the problem and deliberate with yourself via systematic reasoning processes to help come to a correct solution prior to answering. You should enclose your thoughts and internal monologue inside <think> </think> tags, and then provide your solution or response to the problem."
+      }
+    }]
+  })
+);
+
+server.registerPrompt(
+  "llama_3_1_system_default",
+  {
+    title: "Llama 3.1 Default System Prompt",
+    description: "Default system prompt for Llama 3.1.",
+    argsSchema: { reasoning: z.string() }
+  },
+  ({ reasoning }) => ({
+    messages: [{
+      role: "user", // Should be "system"
+      content: {
+        type: "text",
+        text: "You are a helpful assistant."
+      }
+    }]
+  })
+);
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport();
