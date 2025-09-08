@@ -65,6 +65,26 @@ server.registerTool("search",
   })
 );
 
+//
+// Get Weather
+//
+// OpenAI's tutorial on tool calls uses get_weather as an example.
+//
+// Include it here as a test case based on vendor documentation of
+// a model.
+//
+
+server.registerTool("get_weather",
+  {
+    title: "Get Weather",
+    description: "Retrieves current weather for the given location",
+    inputSchema: { location: z.string() }
+  },
+  async ({ location }) => ({
+    content: [{ type: "text", text: "{\"temperature\": {\"value\": 19.0, \"units\": \"Celsius\"}}" }]
+  })
+);
+
 
 // Start receiving messages on stdin and sending messages on stdout
 const transport = new StdioServerTransport();
