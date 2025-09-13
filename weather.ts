@@ -36,7 +36,7 @@ const cambridge = "<p><placeName>Cambridge</placeName><location><country>UK</cou
 //
 // Fetch
 //
-// The LLM is expecting the result to be: {document_id, title, text, url}
+// The LLM is expecting the result to be: {name, title, text, uri}
 //
 // If we return a resource, rather than a text block containing the JSON
 // the LLM is expecting, the glue logic between the LLM and MCP is
@@ -65,32 +65,31 @@ server.registerTool("fetch",
 );
 
 //
-// Search
+// Search Gazeteer
 //
 // Returns a list of {id, title, text, uri}
 // text is a snippet, not the whole document
 //
-// TO DO: return this, not [1]
 //
 
 server.registerTool("search",
   {
-    title: "Search",
-    description: "Search for matching documents in the Vector Store",
-    inputSchema: { query: z.string() }
+    title: "Search Gazeteer",
+    description: "Search the gazeteer for matching documents",
+    inputSchema: { placename: z.string() }
   },
-  async ({ query }) => ({
-    content: [{ type: "text", text: "[1]" }]
+  async ({ placename }) => ({
+    content: [{ type: "text", text: "[{\"id\":\"cambridge\", \"title\":\"Cambridge, UK\", \"text\":\"<geo>52.205 0.1225</geo>\", \"uri\":\"file:///Gazeteer/UK/Cambridge\"}]" }]
   })
 );
 
-server.registerTool("get_weather",
+server.registerTool("search_weather",
   {
-    title: "Get Weather",
-    description: "Retrieves current weather for the given location",
-    inputSchema: { location: z.string() }
+    title: "Search Weather",
+    description: "Search weather reports for matching documents",
+    inputSchema: { latitude: z.string(), longitude: z.string() }
   },
-  async ({ location }) => ({
+  async ({ latitude, longitude }) => ({
     content: [{ type: "text", text: "{\"temperature\": {\"value\": 19.0, \"units\": \"Celsius\"}, \"humidity\": {\"value\": 68.0, \"units\": \"percent\"}}" }]
   })
 );
