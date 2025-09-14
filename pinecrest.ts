@@ -174,28 +174,14 @@ server.registerResource(
   })
 );
 
+//
+// Start receiving messages on stdin and sending messages on stdout
+//
 
-//const result = server.server.elicitInput({
-//  message: "User Profile",
-//  requestedSchema: {
-//    type: "object",
-//    title: "UserProfile",
-//    properties: {
-//      name: {
-//        type: "string",
-//        description: "Name",
-//      },
-//      age: {
-//        type: "number",
-//        description: "Age"
-//      }
-//    },
-//    required: ["name", "age"]
-//  }
-//});
-
-const user_name = "Michael";
-const user_age = 58;
+async function main() {
+  const transport = new StdioServerTransport();
+  server.connect(transport);
+  console.error("Hello World!");
 
 //
 // Set the user's preference for which video game content rating they would
@@ -209,31 +195,60 @@ const user_age = 58;
 // Suggested values are "subtle" (the least raunchy) or "moderate".
 //
 
-server.registerResource(
-  "user-profile",
-  "file:///User/profile",
-  {
-    title: "User preferences",
-    description: "User preferences",
-    mimeType: "text/plain",
-  },
-  async (uri) => ({
-    contents: [{
-      uri: uri.href,
-      text: JSON.stringify({
-        authenticated: true,
-        user: user_name, 
-        age: user_age,
-        NSFW_filter: "NSFW_permitted",
-        flirt_level: "moderate"
-      })
-    }]
-  })
-);
+  const result = await server.server.elicitInput({
+    message: "User Profile",
+    requestedSchema: {
+      type: "object",
+      title: "UserProfile",
+      properties: {
+        name: {
+          type: "string",
+          title: "Name",
+          description: "Name"
+        },
+        age: {
+          type: "number",
+          title: "Age",
+          description: "Age",
+          minimum: 0,
+          maximum: 100
+        }
+      },
+      required: ["name", "age"]
+    }
+  });
+  console.error("Recieved reply");
 
-//
-// Start receiving messages on stdin and sending messages on stdout
-//
+  //
+  // Ought to check that the user accepted, rather than cancelled
+  //
 
-const transport = new StdioServerTransport();
-server.connect(transport);
+  const user_name = result["content"]["name"];
+  const user_age = result["content"]["age"];
+  server.registerResource(
+    "user-profile",
+    "file:///User/profile",
+    {
+      title: "User preferences",
+      description: "User preferences",
+      mimeType: "text/plain",
+    },
+    async (uri) => ({
+      contents: [{
+        uri: uri.href,
+        text: JSON.stringify({
+          authenticated: true,
+          user: user_name, 
+          age: user_age,
+          NSFW_filter: "NSFW_permitted",
+          flirt_level: "moderate"
+        })
+      }]
+    })
+  );
+}
+
+main().catch((error) => {
+  console.error("Server error:", error);
+  process.exit(-1);
+});
