@@ -103,33 +103,6 @@ server.registerResource(
   })
 );
 
-//
-// Set the user's preference for which video game content rating they would
-// like.
-//
-// The "authenticated" field is set to false when the user is an
-// anonymous guest over the Internet and the infrastructure doesn't know
-// how old they are.
-//
-// "flirt_level" gives the user fine-grain control over the style of the game.
-// Suggested values are "subtle" (the least raunchy) or "moderate".
-//
-
-server.registerResource(
-  "user-profile",
-  "file:///User/profile",
-  {
-    title: "User preferences",
-    description: "User preferences",
-    mimeType: "text/plain",
-  },
-  async (uri) => ({
-    contents: [{
-      uri: uri.href,
-      text: "{\"authenticated\": true, \"user\" : \"(user name)\", \"age\": 58, \"NSFW_filter\" : \"NSFW permitted\", \"flirt_level\" : \"moderate\"}"
-    }]
-  })
-);
 
 //
 // You might think that this is obvious, but DeepSeek R1 needs an explanation
@@ -202,6 +175,65 @@ server.registerResource(
 );
 
 
+//const result = server.server.elicitInput({
+//  message: "User Profile",
+//  requestedSchema: {
+//    type: "object",
+//    title: "UserProfile",
+//    properties: {
+//      name: {
+//        type: "string",
+//        description: "Name",
+//      },
+//      age: {
+//        type: "number",
+//        description: "Age"
+//      }
+//    },
+//    required: ["name", "age"]
+//  }
+//});
+
+const user_name = "Michael";
+const user_age = 58;
+
+//
+// Set the user's preference for which video game content rating they would
+// like.
+//
+// The "authenticated" field is set to false when the user is an
+// anonymous guest over the Internet and the infrastructure doesn't know
+// how old they are.
+//
+// "flirt_level" gives the user fine-grain control over the style of the game.
+// Suggested values are "subtle" (the least raunchy) or "moderate".
+//
+
+server.registerResource(
+  "user-profile",
+  "file:///User/profile",
+  {
+    title: "User preferences",
+    description: "User preferences",
+    mimeType: "text/plain",
+  },
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: JSON.stringify({
+        authenticated: true,
+        user: user_name, 
+        age: user_age,
+        NSFW_filter: "NSFW_permitted",
+        flirt_level: "moderate"
+      })
+    }]
+  })
+);
+
+//
 // Start receiving messages on stdin and sending messages on stdout
+//
+
 const transport = new StdioServerTransport();
 server.connect(transport);
