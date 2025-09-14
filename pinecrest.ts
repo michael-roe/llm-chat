@@ -154,6 +154,22 @@ server.registerResource(
 );
 
 server.registerResource(
+  "rpg-setting",
+  "file:///RPG/Pinecrest/setting",
+  {
+    title: "Pinecrest Camp RPG Setting",
+    description: "Pinecrest Camp RPG Setting",
+    mimeType: "text/plain"
+  },
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: "You are spending your summer vacation at Pinecrest Camp. At the camp, there is a lake where you can go canoeing. In the woods surrounding the camp, there is an old tree house. Further into the woods, there is a a Buddhist stone altar. Deeper in still, there is a volcanic hot spring, and then a pool of mud. Beyond that, there is a cave that leads into a cavern with bioluminescent fungi."
+    }]
+  })
+);
+
+server.registerResource(
   "rpg-squirrel",
   "file:///RPG/Pinecrest/squirrel",
   {
@@ -165,6 +181,22 @@ server.registerResource(
     contents: [{
       uri: uri.href,
       text: squirrel
+    }]
+  })
+);
+
+server.registerResource(
+  "rpg-algae",
+  "file:///RPG/Pinecrest/algae",
+  {
+    title: "Algae character description",
+    description: "Algae character description",
+    mimeType: "text/plain",
+  },
+  async (uri) => ({
+    contents: [{
+      uri: uri.href,
+      text: "The bioluminescent algae are ancient, hive-mind organisms with a symbiotic relationship to humans--they're less individuals and more a collective consiousness attuned to biology, emotion, and symbolism."
     }]
   })
 );
