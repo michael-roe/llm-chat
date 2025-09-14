@@ -219,6 +219,10 @@ async function main() {
   });
   console.error("Recieved reply");
 
+  if (result["action"] === "accept") {
+    console.error("accepted!");
+  };
+
   //
   // Ought to check that the user accepted, rather than cancelled
   //
