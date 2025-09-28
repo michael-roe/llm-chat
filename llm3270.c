@@ -156,7 +156,8 @@ unsigned char options_msg[] =
     TELNET_IAC, TELNET_WILL, TELNET_OPT_EOR,
     TELNET_IAC, TELNET_DO, TELNET_OPT_BINARY,
     TELNET_IAC, TELNET_WILL, TELNET_OPT_BINARY,
-    TELNET_IAC, TELNET_WILL, TELNET_OPT_GO_AHEAD};
+    TELNET_IAC, TELNET_WILL, TELNET_OPT_GO_AHEAD,
+    TELNET_IAC, TELNET_DO, TELNET_OPT_GO_AHEAD};
 
 unsigned char screen_msg[] =
   {IBM_WRITE_ERASE, IBM_WCC_PARITY | IBM_WCC_RESERVED | IBM_WCC_GO_AHEAD,
@@ -707,11 +708,18 @@ int i;
       }
       else if (c == TELNET_OPT_EOR)
       {
-        /* fprintf(stderr, "[WILL EOR]"); */
+        /* fwprintf(stderr, L"[WILL EOR]"); */
+        /* fflush(stderr); */
       }
       else if (c == TELNET_OPT_BINARY)
       {
-        /* fprintf(stderr, "[WILL BINARY]"); */
+        /* fwprintf(stderr, L"[WILL BINARY]"); */
+        /* fflush(stderr); */
+      }
+      else if (c == TELNET_OPT_GO_AHEAD)
+      {
+        /* fwprintf(stderr, L"[WILL GA]"); */
+        /* fflush(stderr); */
       }
       else
       {
@@ -729,13 +737,16 @@ int i;
       switch (c)
       {
         case TELNET_OPT_BINARY:
-          /* fprintf(stderr, "[DO BINARY]"); */
+          /* fwprintf(stderr, L"[DO BINARY]"); */
+          /* fflush(stderr); */
           break;
         case TELNET_OPT_GO_AHEAD:
-          /* fprintf(stderr, "[DO GA]"); */
+          /* fwprintf(stderr, L"[DO GA]"); */
+          /* fflush(stderr); */
           break;
         case TELNET_OPT_EOR:
-          /* fprintf(stderr, "[DO EOR]"); */
+          /* fwprintf(stderr, L"[DO EOR]"); */
+          /* fflush(stderr); */
           break;
         default:
           fwprintf(stderr, L"[DO %02x]", c);
