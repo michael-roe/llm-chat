@@ -21,7 +21,7 @@ const server = new McpServer({
   version: "1.0.0"
 });
 
-const cambridge = "<p><placeName>Cambridge</placeName><location><country>UK</country></location><location><geo>52.205 0.1225</geo></location></p>";
+const cambridge = "<listPlace><place><placeName>Cambridge</placeName><location><country>UK</country></location><location><geo>52.205 0.1225</geo></location></place></listPlace>";
 
 
 //
@@ -79,7 +79,7 @@ server.registerTool("search",
     inputSchema: { placename: z.string() }
   },
   async ({ placename }) => ({
-    content: [{ type: "text", text: "[{\"id\":\"cambridge\", \"title\":\"Cambridge, UK\", \"text\":\"<geo>52.205 0.1225</geo>\", \"uri\":\"file:///Gazeteer/UK/Cambridge\"}]" }]
+    content: [{ type: "text", text: `[{\"id\":\"cambridge\", \"title\":\"Cambridge, UK\", \"text\":${cambridge}, \"uri\":\"file:///Gazeteer/UK/Cambridge\"}]` }]
   })
 );
 
