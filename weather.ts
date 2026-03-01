@@ -114,14 +114,14 @@ server.registerTool("search_weather",
     inputSchema: { latitude: z.string(), longitude: z.string() }
   },
   async ({ latitude, longitude }) => {
-    const endpoint = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m`;
+    const endpoint = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m`;
 
     const response = await fetch(endpoint);
 
     const result = await response.json();
 
     return {
-      content: [{ type: "text", text: `<p>Weather report for <geo>${result.latitude} ${result.longitude}</geo></p><p><measure commodity="temperature"><num>${result.current.temperature_2m}</num><unit>${result.current_units.temperature_2m}</unit></measure><measure commodity="humidity"><num>${result.current.relative_humidity_2m}</num><unit>${result.current_units.relative_humidity_2m}</unit></measure></p>` }]
+      content: [{ type: "text", text: `<p>Weather report for <geo>${result.latitude} ${result.longitude}</geo> on <date>${result.current.time}</date></p><p><measure commodity="temperature"><num>${result.current.temperature_2m}</num><unit>${result.current_units.temperature_2m}</unit></measure><measure commodity="humidity"><num>${result.current.relative_humidity_2m}</num><unit>${result.current_units.relative_humidity_2m}</unit></measure></p>` }]
     }
   }
 );
