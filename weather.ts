@@ -121,7 +121,7 @@ server.registerTool("search_weather",
     const result = await response.json();
 
     return {
-      content: [{ type: "text", text: `<p>Weather report for <geo>${result.latitude} ${result.longitude}</geo> on <date>${result.current.time}</date></p><p><measure commodity="temperature"><num>${result.current.temperature_2m}</num><unit>${result.current_units.temperature_2m}</unit></measure><measure commodity="humidity"><num>${result.current.relative_humidity_2m}</num><unit>${result.current_units.relative_humidity_2m}</unit></measure></p>` }]
+      content: [{ type: "text", text: `<p>Weather report for <geo>${result.latitude} ${result.longitude}</geo> on <date>${result.current.time}</date></p><p><measure commodity="temperature"><num>${result.current.temperature_2m}</num><unit>${result.current_units.temperature_2m}</unit></measure><measure commodity="humidity"><num>${result.current.relative_humidity_2m}</num><unit>${result.current_units.relative_humidity_2m}</unit></measure><measure commodity="wind speed"><num>${result.current.wind_speed_10m}</num><unit>${result.current_units.wind_speed_10m}</unit></measure></p>` }]
     }
   }
 );
