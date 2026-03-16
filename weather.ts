@@ -47,6 +47,17 @@ const server = new McpServer({
 
 const cambridge = "<listPlace><place><placeName>Cambridge</placeName><location><country>UK</country></location><location><geo>52.205 0.1225</geo></location></place></listPlace>";
 
+//
+// Get API key from enviroment variable
+//
+
+const geocode_api_key = process.env.GEOCODE_API_KEY;
+
+if (!geocode_api_key)
+{
+  console.error("GEOCODE_API_KEY not set");
+}
+
 
 //
 // Tools
@@ -102,9 +113,11 @@ server.registerTool("search",
     description: "Search the gazeteer for matching documents",
     inputSchema: { placename: z.string() }
   },
-  async ({ placename }) => ({
-    content: [{ type: "text", text: `[{\"id\":\"cambridge\", \"title\":\"Cambridge, UK\", \"text\":${cambridge}, \"uri\":\"file:///Gazeteer/UK/Cambridge\"}]` }]
-  })
+  async ({ placename }) => {
+    return {
+      content: [{ type: "text", text: `[{\"id\":\"cambridge\", \"title\":\"Cambridge, UK\", \"text\":${cambridge}, \"uri\":\"file:///Gazeteer/UK/Cambridge\"}]` }]
+    }
+  }
 );
 
 server.registerTool("search_weather",
