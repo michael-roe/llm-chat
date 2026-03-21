@@ -120,8 +120,6 @@ server.registerTool("search",
 
     const result = await response.json();
 
-    console.error(JSON.stringify(result[0]));
-
     return {
       content: [{
         type: "resource",
