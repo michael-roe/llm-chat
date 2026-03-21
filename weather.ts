@@ -114,8 +114,25 @@ server.registerTool("search",
     inputSchema: { placename: z.string() }
   },
   async ({ placename }) => {
+    const endpoint = `https://geocode.maps.co/search?q=${placename}&api_key=${geocode_api_key}`
+
+    const response = await fetch(endpoint);
+
+    const result = await response.json();
+
+    console.error(JSON.stringify(result[0]));
+
     return {
-      content: [{ type: "text", text: `[{\"id\":\"cambridge\", \"title\":\"Cambridge, UK\", \"text\":${cambridge}, \"uri\":\"file:///Gazeteer/UK/Cambridge\"}]` }]
+      content: [{
+        type: "resource",
+        resource: {
+          uri: `file:///Gazeteer/UK/${result[0].name}`,
+          name: result[0].name,
+          title: `${result[0].name}, ${result[0].address.country_code}`,
+          mimeType: "text/xml",
+          text: `<listPlace><place><placeName>${result[0].name}</placeName><location><country>${result[0].address.country}</country></location><location><geo>${result[0].lat} ${result[0].lon}</geo></location></place></listPlace>`
+        }
+     }] 
     }
   }
 );
