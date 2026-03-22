@@ -114,7 +114,9 @@ server.registerTool("search",
     inputSchema: { placename: z.string() }
   },
   async ({ placename }) => {
-    const endpoint = `https://geocode.maps.co/search?q=${placename}&api_key=${geocode_api_key}`
+    const encoded_place = encodeURIComponent(placename);
+
+    const endpoint = `https://geocode.maps.co/search?q=${encoded_place}&api_key=${geocode_api_key}`
 
     const response = await fetch(endpoint);
 
