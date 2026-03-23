@@ -114,6 +114,18 @@ server.registerTool("search",
     inputSchema: { city: z.string(), country: z.string() }
   },
   async ({ city, country }) => {
+
+    if (!geocode_api_key)
+    {
+      return {
+        content: [{
+          type: "text",
+          text: "GEOCODE_API_KEY not set"
+        }],
+        isError: true
+      }
+    }
+
     const encoded_city = encodeURIComponent(city);
 
     const encoded_country = encodeURIComponent(country);
