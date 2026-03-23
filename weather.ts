@@ -111,12 +111,14 @@ server.registerTool("search",
   {
     title: "Search Gazeteer",
     description: "Search the gazeteer for matching documents",
-    inputSchema: { placename: z.string() }
+    inputSchema: { city: z.string(), country: z.string() }
   },
-  async ({ placename }) => {
-    const encoded_place = encodeURIComponent(placename);
+  async ({ city, country }) => {
+    const encoded_city = encodeURIComponent(city);
 
-    const endpoint = `https://geocode.maps.co/search?q=${encoded_place}&api_key=${geocode_api_key}`
+    const encoded_country = encodeURIComponent(country);
+
+    const endpoint = `https://geocode.maps.co/search?city=${encoded_city}&country=${encoded_country}&api_key=${geocode_api_key}`
 
     const response = await fetch(endpoint);
 
@@ -126,7 +128,7 @@ server.registerTool("search",
       content: [{
         type: "resource",
         resource: {
-          uri: `file:///Gazeteer/UK/${result[0].name}`,
+          uri: `file:///Gazeteer/${result[0].address.country_code}/${result[0].name}`,
           name: result[0].name,
           title: `${result[0].name}, ${result[0].address.country_code}`,
           mimeType: "text/xml",
