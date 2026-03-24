@@ -111,7 +111,10 @@ server.registerTool("search",
   {
     title: "Search Gazeteer",
     description: "Search the gazeteer for matching documents",
-    inputSchema: { city: z.string(), country: z.string() }
+    inputSchema: {
+      city: z.string().describe("City"),
+      country: z.string().describe("Two letter country code")
+    }
   },
   async ({ city, country }) => {
 
@@ -155,7 +158,10 @@ server.registerTool("search_weather",
   {
     title: "Search Weather",
     description: "Search weather reports for matching documents",
-    inputSchema: { latitude: z.string(), longitude: z.string() }
+    inputSchema: {
+      latitude: z.number().describe("Latitude"),
+      longitude: z.number().describe("Longitude")
+    }
   },
   async ({ latitude, longitude }) => {
     const endpoint = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m`;
